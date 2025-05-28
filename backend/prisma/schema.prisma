@@ -1,0 +1,137 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int             @id @default(autoincrement())
+  email         String          @unique
+  password      String
+  img           String?
+  username      String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  reviews       Review[]
+  favoriteMovies FavoriteMovie[]
+  blogPosts     BlogPost[]
+  comments      Comment[]
+  savedPosts    SavedBlogPost[]
+}
+
+model Movies {
+  movieId     Int             @id @default(autoincrement())
+  apiId       String          @unique
+  title       String
+  posterUrl   String?
+  releaseDate DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  reviews     Review[]
+  favoriteBy  FavoriteMovie[]
+  genres      MovieGenre[]
+}
+
+model Genre {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  movies     MovieGenre[]
+}
+
+model MovieGenre {
+  movieId  Int
+  genreId  Int
+  movie    Movies @relation(fields: [movieId], references: [movieId], onDelete: Cascade)
+  genre    Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  @@id([movieId, genreId])
+}
+
+model Review {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  movieId   Int
+  movie     Movies    @relation(fields: [movieId], references: [movieId], onDelete: Cascade)
+  rating    Float
+  comment   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  @@index([movieId])
+}
+
+model FavoriteMovie {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  movieId   Int
+  movie     Movies    @relation(fields: [movieId], references: [movieId], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  @@unique([userId, movieId])
+}
+
+model BlogPost {
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  user          User            @relation(fields: [userId], references: [id])
+  title         String
+  content       String          @db.Text
+  views         Int             @default(0) 
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  images        BlogPostImage[]
+  comments      Comment[]
+  savedBy       SavedBlogPost[]
+  tags          BlogPostTag[]
+}
+
+model BlogPostImage {
+  id          Int      @id @default(autoincrement())
+  blogPostId  Int
+  imageUrl    String
+  mimeType    String?
+  fileName    String?
+  publicId    String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  blogPost    BlogPost @relation(fields: [blogPostId], references: [id])
+}
+
+
+model Comment {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
+  commentableId  Int
+  commentableType String
+  content        String    @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  blogPost       BlogPost? @relation(fields: [commentableId], references: [id], onDelete: Cascade)
+}
+
+model SavedBlogPost {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+  blogPostId Int
+  blogPost   BlogPost  @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  @@unique([userId, blogPostId])
+}
+
+model Tag {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique 
+  blogPosts  BlogPostTag[]
+}
+
+model BlogPostTag {
+  blogPostId Int
+  tagId      Int
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  @@id([blogPostId, tagId])
+}
