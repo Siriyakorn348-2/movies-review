@@ -1,7 +1,8 @@
-
 import { Link } from 'react-router-dom';
 
 function BlogPostTags({ tags }) {
+  console.log('Tags received in BlogPostTags:', tags); 
+
   if (!tags?.length) {
     return <p className="text-gray-400 mb-6">ไม่มีแท็กสำหรับโพสต์นี้</p>;
   }

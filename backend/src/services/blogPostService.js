@@ -11,13 +11,16 @@ const getAllBlogPosts = async () => {
         images: true,
         tags: {
           include: {
-            tag: { select: { id: true, name: true } }, // ลบ optional: true
+            tag: { select: { id: true, name: true } },
           },
         },
       },
     });
-    console.log('Fetched all blog posts:', blogPosts);
-    return blogPosts;
+
+    return blogPosts.map((post) => ({
+      ...post,
+      tags: post.tags.map((t) => ({ tag: { id: t.tag.id, name: t.tag.name } })),
+    }));
   } catch (error) {
     console.error('Error in getAllBlogPosts:', error.message, error.stack);
     throw new Error(`Failed to fetch blog posts: ${error.message}`);
@@ -40,8 +43,11 @@ const getBlogPostById = async (id) => {
       },
     });
     if (!blogPost) throw new Error('ไม่พบโพสต์');
-    console.log('Fetched blog post:', blogPost);
-    return blogPost;
+
+    return {
+      ...blogPost,
+      tags: blogPost.tags.map((t) => ({ tag: { id: t.tag.id, name: t.tag.name } })),
+    };
   } catch (error) {
     console.error('Error in getBlogPostById:', error.message, error.stack);
     throw new Error(`Failed to fetch blog post: ${error.message}`);
@@ -50,14 +56,13 @@ const getBlogPostById = async (id) => {
 
 const getBlogPostsByUserId = async (userId) => {
   try {
-    // ตรวจสอบว่า userId มีอยู่ในฐานข้อมูล
     const userExists = await prisma.user.findUnique({
       where: { id: Number(userId) },
       select: { id: true },
     });
     if (!userExists) {
       console.warn(`User with ID ${userId} not found`);
-      return []; // คืน array ว่างถ้าไม่มีผู้ใช้
+      return [];
     }
 
     const blogPosts = await prisma.blogPost.findMany({
@@ -73,8 +78,10 @@ const getBlogPostsByUserId = async (userId) => {
         },
       },
     });
-    console.log(`Fetched blog posts for user ${userId}:`, blogPosts);
-    return blogPosts;
+    return blogPosts.map((post) => ({
+      ...post,
+      tags: post.tags.map((t) => ({ tag: { id: t.tag.id, name: t.tag.name } })),
+    }));
   } catch (error) {
     console.error('Error in getBlogPostsByUserId:', error.message, error.stack);
     throw new Error(`Failed to fetch user blog posts: ${error.message}`);
@@ -84,16 +91,26 @@ const getBlogPostsByUserId = async (userId) => {
 const createBlogPost = async (userId, data) => {
   try {
     const { title, content, tags } = data;
-    return await prisma.blogPost.create({
+    let tagData = [];
+    if (Array.isArray(tags) && tags.length) {
+      const validTags = await prisma.tag.findMany({
+        where: { id: { in: tags.map((id) => Number(id)) } },
+        select: { id: true },
+      });
+      const validTagIds = validTags.map((tag) => tag.id);
+      const invalidTagIds = tags.filter((tagId) => !validTagIds.includes(Number(tagId)));
+      if (invalidTagIds.length) {
+        throw new Error(`แท็กไม่ถูกต้อง: ${invalidTagIds.join(', ')}`);
+      }
+      tagData = tags.map((tagId) => ({ tagId: Number(tagId) }));
+    }
+
+    const post = await prisma.blogPost.create({
       data: {
         title,
         content,
         userId: Number(userId),
-        tags: {
-          create: tags?.map((tagId) => ({
-            tagId: Number(tagId),
-          })) || [],
-        },
+        tags: { create: tagData },
       },
       include: {
         user: { select: { id: true, username: true, img: true } },
@@ -105,6 +122,11 @@ const createBlogPost = async (userId, data) => {
         },
       },
     });
+    console.log('Created blog post with tags:', post.tags);
+    return {
+      ...post,
+      tags: post.tags.map((t) => ({ tag: { id: t.tag.id, name: t.tag.name } })),
+    };
   } catch (error) {
     console.error('Error in createBlogPost:', error.message, error.stack);
     throw new Error(`Failed to create blog post: ${error.message}`);
@@ -114,16 +136,35 @@ const createBlogPost = async (userId, data) => {
 const updateBlogPost = async (id, userId, data) => {
   try {
     const { title, content, tags } = data;
-    await prisma.blogPostTag.deleteMany({ where: { blogPostId: Number(id) } });
-    return await prisma.blogPost.update({
+    const postExists = await prisma.blogPost.findUnique({
       where: { id: Number(id), userId: Number(userId) },
+    });
+    if (!postExists) {
+      throw new Error('โพสต์ไม่พบหรือคุณไม่มีสิทธิ์แก้ไข');
+    }
+
+    let tagData = [];
+    if (Array.isArray(tags) && tags.length) {
+      const validTags = await prisma.tag.findMany({
+        where: { id: { in: tags.map((id) => Number(id)) } },
+        select: { id: true },
+      });
+      const validTagIds = validTags.map((tag) => tag.id);
+      const invalidTagIds = tags.filter((tagId) => !validTagIds.includes(Number(tagId)));
+      if (invalidTagIds.length) {
+        throw new Error(`แท็กไม่ถูกต้อง: ${invalidTagIds.join(', ')}`);
+      }
+      tagData = tags.map((tagId) => ({ tagId: Number(tagId) }));
+    }
+
+    const updatedPost = await prisma.blogPost.update({
+      where: { id: Number(id) },
       data: {
         title,
         content,
         tags: {
-          create: tags?.map((tagId) => ({
-            tagId: Number(tagId),
-          })) || [],
+          deleteMany: {}, // ลบแท็กเก่าทั้งหมด
+          create: tagData, // สร้างการเชื่อมโยงแท็กใหม่
         },
       },
       include: {
@@ -137,6 +178,11 @@ const updateBlogPost = async (id, userId, data) => {
         },
       },
     });
+    console.log('Updated blog post with tags:', updatedPost.tags);
+    return {
+      ...updatedPost,
+      tags: updatedPost.tags.map((t) => ({ tag: { id: t.tag.id, name: t.tag.name } })),
+    };
   } catch (error) {
     console.error('Error in updateBlogPost:', error.message, error.stack);
     throw new Error(`Failed to update blog post: ${error.message}`);
@@ -182,7 +228,7 @@ const deleteBlogPost = async (id, userId) => {
 
 const getBlogPostsByTag = async (tagId) => {
   try {
-    return await prisma.blogPost.findMany({
+    const blogPosts = await prisma.blogPost.findMany({
       where: {
         tags: {
           some: {
@@ -201,6 +247,10 @@ const getBlogPostsByTag = async (tagId) => {
         },
       },
     });
+    return blogPosts.map((post) => ({
+      ...post,
+      tags: post.tags.map((t) => ({ tag: { id: t.tag.id, name: t.tag.name } })),
+    }));
   } catch (error) {
     console.error('Error in getBlogPostsByTag:', error.message, error.stack);
     throw new Error(`Failed to fetch blog posts by tag: ${error.message}`);

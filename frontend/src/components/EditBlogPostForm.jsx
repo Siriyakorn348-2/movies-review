@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
-  const [form, setForm] = useState({
-    title: blogPost.title,
-    content: blogPost.content,
-  });
-  const [tags, setTags] = useState(blogPost.tags?.map((tag) => tag.tag.id) || []);
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ title: '', content: '' });
+  const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const [images, setImages] = useState([]);
-  const [existingImages, setExistingImages] = useState(blogPost.images || []);
+  const [existingImages, setExistingImages] = useState([]);
   const [newTag, setNewTag] = useState('');
-  const [editingTag, setEditingTag] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -19,17 +18,66 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   useEffect(() => {
+    if (!blogPost) {
+      setError('ไม่มีข้อมูลโพสต์');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('กรุณาเข้าสู่ระบบ');
+      navigate('/login');
+      return;
+    }
+
+    setForm({
+      title: blogPost.title || '',
+      content: blogPost.content || '',
+    });
+    setExistingImages(blogPost.images || []);
+
+    const initialTags = Array.isArray(blogPost.tags)
+      ? blogPost.tags
+          .map((t) => {
+            const id = Number(t?.tag?.id || t?.id);
+            return !isNaN(id) && Number.isInteger(id) ? id : null;
+          })
+          .filter((id) => id !== null)
+      : [];
+    setTags(initialTags);
+    console.log('Initialized tags:', initialTags);
+
     const fetchTags = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/tags');
+        console.log('Fetching all tags');
+        const response = await axios.get('http://localhost:3000/api/tags', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Fetched available tags:', response.data);
         setAvailableTags(response.data);
       } catch (error) {
-        console.error('Failed to fetch tags:', error);
-        setError('ไม่สามารถโหลดแท็กได้');
+        console.error('Failed to fetch tags:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        setError('ไม่สามารถโหลดแท็กได้ กรุณาลองใหม่');
       }
     };
     fetchTags();
-  }, []);
+  }, [blogPost, navigate]);
+
+  useEffect(() => {
+    if (newTag.trim()) {
+      const filtered = availableTags.filter((tag) =>
+        tag.name.toLowerCase().includes(newTag.trim().toLowerCase())
+      );
+      setSuggestions(filtered);
+      console.log('Suggestions updated:', filtered);
+    } else {
+      setSuggestions([]);
+    }
+  }, [newTag, availableTags]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -46,7 +94,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     });
 
     if (existingImages.length + images.length + validFiles.length > MAX_IMAGES) {
-      setError(`คุณสามารถมีรูปภาพได้สูงสุด ${MAX_IMAGES} รูป`);
+      setError(`คุณสามารถรวมรูปภาพได้สูงสุด ${MAX_IMAGES} รูป`);
       return;
     }
 
@@ -58,24 +106,22 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleDeleteImage = async (imageId) => {
-    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?')) return;
+  const handleDeleteImage = async (e, imageId) => {
+    e.preventDefault();
+    if (!window.confirm('ยืนยันการลบรูปภาพ?')) return;
     try {
       await axios.delete(`http://localhost:3000/api/blog-posts/${blogPost.id}/images/${imageId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       });
       setExistingImages((prev) => prev.filter((image) => image.id !== imageId));
+      console.log('Deleted image:', imageId);
       setError(null);
     } catch (error) {
       console.error('Failed to delete image:', error);
       setError(error.response?.data?.error || 'ไม่สามารถลบรูปภาพได้ กรุณาลองใหม่');
     }
-  };
-
-  const handleTagToggle = (tagId) => {
-    setTags((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    );
   };
 
   const handleNewTagSubmit = async (e) => {
@@ -84,6 +130,25 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
       setError('กรุณาระบุชื่อแท็ก');
       return;
     }
+
+    const existingTag = availableTags.find(
+      (tag) => tag.name.toLowerCase() === newTag.trim().toLowerCase()
+    );
+
+    if (existingTag) {
+      if (!tags.includes(existingTag.id)) {
+        setTags((prev) => {
+          const newTags = [...prev, existingTag.id];
+          console.log('Added existing tag:', newTags);
+          return newTags;
+        });
+      }
+      setNewTag('');
+      setSuggestions([]);
+      setError(null);
+      return;
+    }
+
     try {
       const response = await axios.post(
         'http://localhost:3000/api/tags',
@@ -95,9 +160,15 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           },
         }
       );
-      setAvailableTags((prev) => [...prev, response.data]);
-      setTags((prev) => [...prev, response.data.id]);
+      const newTagData = response.data;
+      setAvailableTags((prev) => [...prev, newTagData]);
+      setTags((prev) => {
+        const newTags = [...prev, newTagData.id];
+        console.log('Added new tag:', newTags);
+        return newTags;
+      });
       setNewTag('');
+      setSuggestions([]);
       setError(null);
     } catch (error) {
       console.error('Failed to create tag:', error);
@@ -105,61 +176,45 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     }
   };
 
-  const handleEditTag = (tag) => {
-    setEditingTag(tag);
-    setNewTag(tag.name);
-  };
-
-  const handleUpdateTag = async (e) => {
-    e.preventDefault();
-    if (!newTag.trim()) {
-      setError('กรุณาระบุชื่อแท็ก');
-      return;
-    }
-    try {
-      const response = await axios.put(
-        `http://localhost:3000/api/tags/${editingTag.id}`,
-        { name: newTag.trim() },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      setAvailableTags((prev) =>
-        prev.map((tag) => (tag.id === editingTag.id ? response.data : tag))
-      );
-      setNewTag('');
-      setEditingTag(null);
-      setError(null);
-    } catch (error) {
-      console.error('Failed to update tag:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถแก้ไขแท็กได้ กรุณาลองใหม่');
-    }
-  };
-
-  const handleDeleteTag = async (tagId) => {
-    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบแท็กนี้?')) return;
-    try {
-      await axios.delete(`http://localhost:3000/api/tags/${tagId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  const handleSelectSuggestion = (tag) => {
+    if (!tags.includes(tag.id)) {
+      setTags((prev) => {
+        const newTags = [...prev, tag.id];
+        console.log('Selected suggestion:', newTags);
+        return newTags;
       });
-      setAvailableTags((prev) => prev.filter((tag) => tag.id !== tagId));
-      setTags((prev) => prev.filter((id) => id !== tagId));
-      setError(null);
-    } catch (error) {
-      console.error('Failed to delete tag:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถลบแท็กได้ กรุณาลองใหม่');
     }
+    setNewTag('');
+    setSuggestions([]);
+  };
+
+  const handleRemoveTag = (tagId) => {
+    setTags((prev) => {
+      const newTags = prev.filter((id) => id !== tagId);
+      console.log('Removed tag:', newTags);
+      return newTags;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit({ ...form, tags });
+      if (!Array.isArray(tags) || tags.some((id) => isNaN(id) || !Number.isInteger(id))) {
+        setError('รูปแบบ ID แท็กไม่ถูกต้อง');
+        return;
+      }
 
+      const updatedPost = {
+        title: form.title,
+        content: form.content,
+        tags,
+      };
+      console.log('Submitting edit:', updatedPost);
+
+      await onSubmit(updatedPost);
+
+  
       if (images.length > 0) {
         const uploadPromises = images.map(async (image, index) => {
           try {
@@ -180,7 +235,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
             return {
               success: false,
               index,
-              error: `การอัปโหลดรูปภาพ ${image.name} ล้มเหลว: ${
+              error: `ไม่สามารถอัปโหลดรูปภาพ ${image.name}: ${
                 error.response?.data?.error || error.message
               }`,
             };
@@ -195,29 +250,31 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
         }
       }
 
-      const response = await axios.get(`http://localhost:3000/api/blog-posts/${blogPost.id}`);
-      setExistingImages(response.data.images || []);
-      onSubmit(response.data);
+      setImages([]); 
     } catch (error) {
-      console.error('Failed to update blog post:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถแก้ไขโพสต์ได้ กรุณาลองใหม่');
+      console.error('Failed to update blog post:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      setError(error.response?.data?.error || 'ไม่สามารถอัปเดตโพสต์ได้ กรุณาลองใหม่');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-[#141414] p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">แก้ไขบล็อก</h2>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+    <div className="max-w-5xl mx-auto bg-[#141414] p-10 rounded-lg shadow-lg">
       <form onSubmit={handleSubmit}>
+        <h2 className="text-2xl font-bold mb-4">แก้ไขโพสต์</h2>
+        {error && <div className="text-red-400 mb-4">{error}</div>}
         <div className="mb-4">
           <label className="block mb-1">หัวข้อ</label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -227,87 +284,78 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             rows="5"
-            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-gray-700"
             required
           ></textarea>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">แท็ก</label>
-          <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => (
-              <div key={tag.id} className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleTagToggle(tag.id)}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    tags.includes(tag.id) ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'
-                  }`}
-                >
-                  {tag.name}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleEditTag(tag)}
-                  className="text-blue-600 hover:underline text-xs"
-                >
-                  แก้ไข
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteTag(tag.id)}
-                  className="text-red-600 hover:underline text-xs"
-                >
-                  ลบ
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">{editingTag ? 'แก้ไขแท็ก' : 'เพิ่มแท็กใหม่'}</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-              placeholder={editingTag ? 'แก้ไขชื่อแท็ก' : 'ป้อนชื่อแท็กใหม่'}
-            />
-            <button
-              type="button"
-              onClick={editingTag ? handleUpdateTag : handleNewTagSubmit}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-            >
-              {editingTag ? 'บันทึก' : 'เพิ่มแท็ก'}
-            </button>
-            {editingTag && (
+          <label className="block mb-1">แท็ก (เลือกแล้ว: {tags.length})</label>
+          <div className="relative">
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tags.map((tagId) => {
+                const tag = availableTags.find((t) => t.id === tagId);
+                return tag ? (
+                  <div
+                    key={tagId}
+                    className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-full text-sm"
+                  >
+                    <span>{tag.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tagId)}
+                      className="text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : null;
+              })}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+                placeholder="ป้อนแท็กใหม่หรือค้นหา"
+              />
               <button
                 type="button"
-                onClick={() => {
-                  setNewTag('');
-                  setEditingTag(null);
-                }}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                onClick={handleNewTagSubmit}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
               >
-                ยกเลิก
+                เพิ่มแท็ก
               </button>
+            </div>
+            {suggestions.length > 0 && (
+              <ul className="absolute z-10 w-full bg-[#2A2A2A] rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                {suggestions.map((tag) => (
+                  <li
+                    key={tag.id}
+                    onClick={() => handleSelectSuggestion(tag)}
+                    className="px-3 py-2 text-white hover:bg-red-600 cursor-pointer"
+                  >
+                    {tag.name}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
         <div className="mb-4">
           <label className="block mb-1">รูปภาพที่มีอยู่ (สูงสุด {MAX_IMAGES} รูป)</label>
           {existingImages.length > 0 ? (
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2">
               {existingImages.map((image) => (
                 <div key={image.id} className="relative">
                   <img
-                    src={image.imageUrl}
+                    src={image.url}
                     alt="Existing image"
                     className="w-[80px] h-[80px] rounded-md object-cover"
                   />
                   <button
                     type="button"
-                    onClick={() => handleDeleteImage(image.id)}
+                    onClick={(e) => handleDeleteImage(e, image.id)}
                     className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
                   >
                     X
@@ -320,7 +368,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           )}
         </div>
         <div className="mb-4">
-          <label className="block mb-1">อัปโหลดรูปภาพเพิ่มเติม</label>
+          <label className="block mb-1">อัปโหลดรูปภาพเพิ่ม</label>
           <input
             type="file"
             multiple

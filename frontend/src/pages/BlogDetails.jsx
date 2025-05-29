@@ -27,7 +27,7 @@ function BlogDetails() {
 
   const fetchPost = async () => {
     try {
-      const postId = Number(id); // แปลง id เป็น Number
+      const postId = Number(id); 
       if (isNaN(postId)) {
         throw new Error('รหัสโพสต์ไม่ถูกต้อง');
       }
@@ -45,7 +45,6 @@ function BlogDetails() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         console.log('Fetched saved posts:', savedResponse.data);
-        // แปลง blogPostId เป็น Number เพื่อให้การเปรียบเทียบสอดคล้องกัน
         const savedPostIds = savedResponse.data.map((savedPost) => savedPost.blogPostId);
         console.log('Saved post IDs:', savedPostIds, 'Current post ID:', postId);
         setIsSaved(savedPostIds.includes(postId));
@@ -106,7 +105,6 @@ function BlogDetails() {
           attempts++;
           console.warn(`พยายามครั้งที่ ${attempts} ล้มเหลว:`, err.response?.data || err);
           if (err.response?.data?.error === 'โพสต์นี้ถูกบันทึกแล้ว') {
-            // ถ้าโพสต์ถูกบันทึกแล้ว ให้อัปเดตสถานะ isSaved
             setIsSaved(true);
             setSaveMessage('โพสต์นี้ถูกบันทึกแล้ว');
             break;
@@ -175,26 +173,32 @@ function BlogDetails() {
     setIsMenuOpen(false);
   };
 
-  const handleEditSubmit = async (updatedPost) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:3000/api/blog-posts/${id}`,
-        updatedPost,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      setBlogPost(response.data);
-      setIsEditing(false);
-      setError(null);
-    } catch (error) {
-      console.error('Error updating blog post:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถแก้ไขโพสต์ได้');
-    }
-  };
+ const handleEditSubmit = async (updatedPost) => {
+  try {
+    console.log('Updating post with data:', updatedPost); 
+    const response = await axios.put(
+      `http://localhost:3000/api/blog-posts/${id}`,
+      updatedPost,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    console.log('Update response:', response.data); 
+    setBlogPost(response.data);
+    setIsEditing(false);
+    setError(null);
+  } catch (error) {
+    console.error('Error updating blog post:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    setError(error.response?.data?.error || 'ไม่สามารถแก้ไขโพสต์ได้ กรุณาลองใหม่');
+  }
+};
 
   const handleCommentDelete = () => {
     fetchPost();

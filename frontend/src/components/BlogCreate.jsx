@@ -11,7 +11,7 @@ function BlogCreate() {
   const [availableTags, setAvailableTags] = useState([]);
   const [images, setImages] = useState([]);
   const [newTag, setNewTag] = useState('');
-  const [editingTag, setEditingTag] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -19,9 +19,16 @@ function BlogCreate() {
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   useEffect(() => {
+    console.log('Component mounted, clearing tags');
+    setTags([]);
     const fetchTags = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/tags');
+        const response = await axios.get('http://localhost:3000/api/tags', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        console.log('Fetched tags:', response.data);
         setAvailableTags(response.data);
       } catch (error) {
         console.error('Failed to fetch tags:', error);
@@ -30,6 +37,18 @@ function BlogCreate() {
     };
     fetchTags();
   }, []);
+
+  useEffect(() => {
+    if (newTag.trim()) {
+      const filtered = availableTags.filter((tag) =>
+        tag.name.toLowerCase().includes(newTag.trim().toLowerCase())
+      );
+      setSuggestions(filtered);
+      console.log('Suggestions updated:', filtered);
+    } else {
+      setSuggestions([]);
+    }
+  }, [newTag, availableTags]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -58,18 +77,31 @@ function BlogCreate() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleTagToggle = (tagId) => {
-    setTags((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    );
-  };
-
   const handleNewTagSubmit = async (e) => {
     e.preventDefault();
     if (!newTag.trim()) {
       setError('กรุณาระบุชื่อแท็ก');
       return;
     }
+
+    const existingTag = availableTags.find(
+      (tag) => tag.name.toLowerCase() === newTag.trim().toLowerCase()
+    );
+
+    if (existingTag) {
+      if (!tags.includes(existingTag.id)) {
+        setTags((prev) => {
+          const newTags = [...prev, existingTag.id];
+          console.log('Added existing tag:', newTags);
+          return newTags;
+        });
+      }
+      setNewTag('');
+      setSuggestions([]);
+      setError(null);
+      return;
+    }
+
     try {
       const response = await axios.post(
         'http://localhost:3000/api/tags',
@@ -81,9 +113,15 @@ function BlogCreate() {
           },
         }
       );
+      console.log('Created new tag:', response.data);
       setAvailableTags((prev) => [...prev, response.data]);
-      setTags((prev) => [...prev, response.data.id]);
+      setTags((prev) => {
+        const newTags = [...prev, response.data.id];
+        console.log('Updated tags after new tag:', newTags);
+        return newTags;
+      });
       setNewTag('');
+      setSuggestions([]);
       setError(null);
     } catch (error) {
       console.error('Failed to create tag:', error);
@@ -91,53 +129,24 @@ function BlogCreate() {
     }
   };
 
-  const handleEditTag = (tag) => {
-    setEditingTag(tag);
-    setNewTag(tag.name);
-  };
-
-  const handleUpdateTag = async (e) => {
-    e.preventDefault();
-    if (!newTag.trim()) {
-      setError('กรุณาระบุชื่อแท็ก');
-      return;
-    }
-    try {
-      const response = await axios.put(
-        `http://localhost:3000/api/tags/${editingTag.id}`,
-        { name: newTag.trim() },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      setAvailableTags((prev) =>
-        prev.map((tag) => (tag.id === editingTag.id ? response.data : tag))
-      );
-      setNewTag('');
-      setEditingTag(null);
-      setError(null);
-    } catch (error) {
-      console.error('Failed to update tag:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถแก้ไขแท็กได้ กรุณาลองใหม่');
-    }
-  };
-
-  const handleDeleteTag = async (tagId) => {
-    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบแท็กนี้?')) return;
-    try {
-      await axios.delete(`http://localhost:3000/api/tags/${tagId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  const handleSelectSuggestion = (tag) => {
+    if (!tags.includes(tag.id)) {
+      setTags((prev) => {
+        const newTags = [...prev, tag.id];
+        console.log('Selected suggestion:', newTags);
+        return newTags;
       });
-      setAvailableTags((prev) => prev.filter((tag) => tag.id !== tagId));
-      setTags((prev) => prev.filter((id) => id !== tagId));
-      setError(null);
-    } catch (error) {
-      console.error('Failed to delete tag:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถลบแท็กได้ กรุณาลองใหม่');
     }
+    setNewTag('');
+    setSuggestions([]);
+  };
+
+  const handleRemoveTag = (tagId) => {
+    setTags((prev) => {
+      const newTags = prev.filter((id) => id !== tagId);
+      console.log('Removed tag:', newTags);
+      return newTags;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -148,6 +157,7 @@ function BlogCreate() {
     }
     setIsSubmitting(true);
     try {
+      console.log('Submitting blog post with tags:', tags);
       const postResponse = await axios.post(
         'http://localhost:3000/api/blog-posts',
         {
@@ -162,6 +172,7 @@ function BlogCreate() {
           },
         }
       );
+      console.log('Post created:', postResponse.data);
 
       if (images.length > 0) {
         const uploadPromises = images.map(async (image, index) => {
@@ -198,6 +209,13 @@ function BlogCreate() {
         }
       }
 
+      console.log('Clearing form and tags after submission');
+      setForm({ title: '', content: '' });
+      setTags([]);
+      setImages([]);
+      setNewTag('');
+      setSuggestions([]);
+      setError(null);
       navigate('/blogs');
     } catch (error) {
       console.error('Failed to create blog post:', error);
@@ -208,96 +226,94 @@ function BlogCreate() {
   };
 
   const handleCancel = () => {
+    console.log('Cancel clicked, clearing form and tags');
+    setForm({ title: '', content: '' });
+    setTags([]);
+    setImages([]);
+    setNewTag('');
+    setSuggestions([]);
+    setError(null);
     navigate('/blogs');
   };
 
   if (!user) return <div className="text-white text-center">กรุณาเข้าสู่ระบบเพื่อสร้างบล็อก</div>;
 
   return (
-    <div className="max-w-5xl	 mx-auto bg-[#141414] p-10 rounded-lg shadow-lg">
+    <div className="max-w-5xl mx-auto bg-[#141414] p-10 rounded-lg shadow-lg">
       <form onSubmit={handleSubmit}>
         <h2 className="text-2xl font-bold mb-4">สร้างบล็อกใหม่</h2>
-        {error && <div className="text-red-500 mb-4">{error}</div>}
+        {error && <div className="text-red-400 mb-4">{error}</div>}
         <div className="mb-4">
           <label className="block mb-1">หัวข้อ</label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
         <div className="mb-4">
           <label className="block mb-1">เนื้อหา</label>
           <textarea
-            value={form.content}
+            value={form.content} 
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             rows="5"
-            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+            className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-gray-700"
             required
           ></textarea>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">แท็ก</label>
-          <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => (
-              <div key={tag.id} className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleTagToggle(tag.id)}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    tags.includes(tag.id) ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'
-                  }`}
-                >
-                  {tag.name}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleEditTag(tag)}
-                  className="text-blue-600 hover:underline text-xs"
-                >
-                  แก้ไข
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteTag(tag.id)}
-                  className="text-red-600 hover:underline text-xs"
-                >
-                  ลบ
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">{editingTag ? 'แก้ไขแท็ก' : 'เพิ่มแท็กใหม่'}</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-              placeholder={editingTag ? 'แก้ไขชื่อแท็ก' : 'ป้อนชื่อแท็กใหม่'}
-            />
-            <button
-              type="button"
-              onClick={editingTag ? handleUpdateTag : handleNewTagSubmit}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-            >
-              {editingTag ? 'บันทึก' : 'เพิ่มแท็ก'}
-            </button>
-            {editingTag && (
+          <label className="block mb-1">แท็ก (เลือกแล้ว: {tags.length})</label>
+          <div className="relative">
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tags.map((tagId) => {
+                const tag = availableTags.find((t) => t.id === tagId);
+                return tag ? (
+                  <div
+                    key={tagId}
+                    className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-full text-sm"
+                  >
+                    <span>{tag.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tagId)}
+                      className="text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : null;
+              })}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                className="w-full p-2 bg-[#2A2A2A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+                placeholder="ป้อนชื่อแท็กใหม่หรือค้นหา"
+              />
               <button
                 type="button"
-                onClick={() => {
-                  setNewTag('');
-                  setEditingTag(null);
-                }}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                onClick={handleNewTagSubmit}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
               >
-                ยกเลิก
+                เพิ่มแท็ก
               </button>
+            </div>
+            {suggestions.length > 0 && (
+              <ul className="absolute z-10 w-full bg-[#2A2A2A] rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                {suggestions.map((tag) => (
+                  <li
+                    key={tag.id}
+                    onClick={() => handleSelectSuggestion(tag)}
+                    className="px-3 py-2 text-white hover:bg-red-600 cursor-pointer"
+                  >
+                    {tag.name}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
@@ -311,18 +327,17 @@ function BlogCreate() {
             className="w-full p-2 bg-[#2A2A2A] rounded-md text-white"
           />
           {images.length > 0 ? (
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div>
               {images.map((image, index) => (
                 <div key={index} className="relative">
                   <img
                     src={URL.createObjectURL(image)}
                     alt="Preview"
-                    className="w-[80px] h-[80px] rounded-md object-cover"
+                    rows="w-[80px] h-[80px] rounded-md object-cover"
                   />
                   <button
-                    type="button"
                     onClick={() => handleRemoveImage(index)}
-                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                    className="absolute top-0 right-0 bg-red-50 text-white rounded-full w-6 h-6 flex items-center justify-center"
                   >
                     X
                   </button>
@@ -330,23 +345,23 @@ function BlogCreate() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-400">ไม่มีรูปภาพ</p>
+            <p className="text-gray-400">No images available.</p>
           )}
         </div>
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 disabled:bg-gray-600"
+            className="bg-red-600 text-white p-2 rounded-md hover:bg-gray-300 disabled:bg-gray-50"
           >
-            {isSubmitting ? 'กำลังสร้าง...' : 'สร้าง'}
+            {isSubmitting ? 'Creating...' : 'Create Blog'}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700"
+            className="bg-gray-600 text-white p-2 rounded-md hover:bg-gray-50"
           >
-            ยกเลิก
+            Cancel
           </button>
         </div>
       </form>
