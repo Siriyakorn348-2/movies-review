@@ -19,7 +19,7 @@ function BlogPostComment({ comment, onDelete }) {
     setError(null);
 
     try {
-      await axios.delete(`http://localhost:3000/api/comments/${comment.id}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/comments/${comment.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       onDelete(comment.id);

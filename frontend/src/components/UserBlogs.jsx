@@ -15,7 +15,7 @@ function UserBlogs() {
       const fetchUserPosts = async () => {
         try {
           setLoading(true);
-          const response = await axios.get('http://localhost:3000/api/blog-posts', {
+          const response = await axios.get('http://192.168.1.165:3000/api/blog-posts', {
             params: { userId: user.id },
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });

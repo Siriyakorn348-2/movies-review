@@ -11,7 +11,7 @@ function SavedBlogPosts() {
   const fetchSavedPosts = async () => {
     if (!user) return;
     try {
-      const response = await axios.get('http://localhost:3000/api/saved-blog-posts', {
+      const response = await axios.get('http://192.168.1.165:3000/api/saved-blog-posts', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       console.log('Fetched saved posts in SavedBlogPosts:', response.data);
@@ -29,7 +29,7 @@ function SavedBlogPosts() {
 
   const handleRemove = async (blogPostId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/saved-blog-posts/${blogPostId}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/saved-blog-posts/${blogPostId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setPosts((prev) => prev.filter((p) => p.blogPost.id !== blogPostId));

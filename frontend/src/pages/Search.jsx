@@ -21,7 +21,7 @@ function Search() {
         setError(null);
         try {
           const response = await axios.get(
-            `http://localhost:3000/api/movies/search?query=${encodeURIComponent(query)}`
+            `http://192.168.1.165:3000/api/movies/search?query=${encodeURIComponent(query)}`
           );
           setMovies(response.data);
           setCurrentPage(1);

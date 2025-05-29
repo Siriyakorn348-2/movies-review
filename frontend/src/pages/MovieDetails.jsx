@@ -32,14 +32,14 @@ function MovieDetails() {
 
         let movieInDb;
         try {
-          const backendResponse = await axios.get(`http://localhost:3000/api/movies/${id}`);
+          const backendResponse = await axios.get(`http://192.168.1.165:3000/api/movies/${id}`);
           movieInDb = backendResponse.data;
           setBackendMovieId(movieInDb.movieId);
         } catch (backendError) {
           console.warn('Movie not found in backend:', backendError.response?.data || backendError.message);
          
           try {
-            const response = await axios.post('http://localhost:3000/api/movies/sync', {
+            const response = await axios.post('http://192.168.1.165:3000/api/movies/sync', {
               apiId: id,
               title: tmdbResponse.data.title,
               posterUrl: tmdbResponse.data.poster_path
@@ -61,7 +61,7 @@ function MovieDetails() {
         if (movieInDb && movieInDb.movieId) {
           try {
             const reviewsResponse = await axios.get(
-              `http://localhost:3000/api/reviews?movieId=${movieInDb.movieId}`
+              `http://192.168.1.165:3000/api/reviews?movieId=${movieInDb.movieId}`
             );
             setReviews(reviewsResponse.data);
           } catch (reviewError) {
@@ -77,7 +77,7 @@ function MovieDetails() {
         if (user) {
           const token = localStorage.getItem('token');
           if (!token) throw new Error('No token found');
-          const favoritesResponse = await axios.get('http://localhost:3000/api/favorites', {
+          const favoritesResponse = await axios.get('http://192.168.1.165:3000/api/favorites', {
             headers: { Authorization: `Bearer ${token}` },
           });
           setIsFavorite(favoritesResponse.data.some((fav) => fav.movie.apiId === id));
@@ -108,13 +108,13 @@ function MovieDetails() {
     }
     try {
       if (isFavorite) {
-        await axios.delete(`http://localhost:3000/api/favorites/${id}`, {
+        await axios.delete(`http://192.168.1.165:3000/api/favorites/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setIsFavorite(false);
       } else {
         await axios.post(
-          'http://localhost:3000/api/favorites',
+          'http://192.168.1.165:3000/api/favorites',
           { apiId: id },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -153,7 +153,7 @@ function MovieDetails() {
       setSubmitError(null);
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:3000/api/reviews',
+        'http://192.168.1.165:3000/api/reviews',
         {
           movieId: backendMovieId,
           rating: ratingValue,
@@ -163,7 +163,7 @@ function MovieDetails() {
       );
       setReviewForm({ rating: '', comment: '' });
       const reviewsResponse = await axios.get(
-        `http://localhost:3000/api/reviews?movieId=${backendMovieId}`
+        `http://192.168.1.165:3000/api/reviews?movieId=${backendMovieId}`
       );
       setReviews(reviewsResponse.data);
     } catch (error) {
@@ -176,7 +176,7 @@ function MovieDetails() {
     if (!user) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/api/reviews/${reviewId}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/reviews/${reviewId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReviews(reviews.filter((review) => review.id !== reviewId));

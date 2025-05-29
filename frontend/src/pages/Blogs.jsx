@@ -19,9 +19,9 @@ function Blogs() {
     try {
       const params = new URLSearchParams(location.search);
       const tagId = params.get('tag');
-      let url = 'http://localhost:3000/api/blog-posts';
+      let url = 'http://192.168.1.165:3000/api/blog-posts';
       if (tagId) {
-        url = `http://localhost:3000/api/blog-posts/tag/${tagId}`;
+        url = `http://192.168.1.165:3000/api/blog-posts/tag/${tagId}`;
       }
       const response = await axios.get(url);
       // เรียงลำดับโพสต์จากใหม่ไปเก่า
@@ -39,7 +39,7 @@ function Blogs() {
 
   const fetchTags = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/tags');
+      const response = await axios.get('http://192.168.1.165:3000/api/tags');
       setAvailableTags(response.data);
     } catch (error) {
       console.error('Failed to fetch tags:', error);
@@ -54,7 +54,7 @@ function Blogs() {
   const handleDelete = async (id) => {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/blog-posts/${id}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/blog-posts/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setBlogPosts((prev) => prev.filter((post) => post.id !== id));

@@ -16,7 +16,7 @@ function Reviews() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/reviews');
+        const response = await axios.get('http://192.168.1.165:3000/api/reviews');
         setReviews(response.data);
       } catch (error) {
         console.error('Failed to fetch reviews:', error);
@@ -24,7 +24,7 @@ function Reviews() {
     };
     const fetchMovies = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/movies');
+        const response = await axios.get('http://192.168.1.165:3000/api/movies');
         setMovies(response.data);
       } catch (error) {
         console.error('Failed to fetch movies:', error);
@@ -37,11 +37,11 @@ function Reviews() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/reviews', form, {
+      await axios.post('http://192.168.1.165:3000/api/reviews', form, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setForm({ movieId: '', rating: '', comment: '' });
-      const response = await axios.get('http://localhost:3000/api/reviews');
+      const response = await axios.get('http://192.168.1.165:3000/api/reviews');
       setReviews(response.data);
     } catch (error) {
       console.error('Failed to submit review:', error);
@@ -50,7 +50,7 @@ function Reviews() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/reviews/${id}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/reviews/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setReviews((prev) => prev.filter((r) => r.id !== id));

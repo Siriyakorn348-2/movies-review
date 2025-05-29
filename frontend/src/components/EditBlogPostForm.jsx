@@ -50,7 +50,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     const fetchTags = async () => {
       try {
         console.log('Fetching all tags');
-        const response = await axios.get('http://localhost:3000/api/tags', {
+        const response = await axios.get('http://192.168.1.165:3000/api/tags', {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Fetched available tags:', response.data);
@@ -110,7 +110,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     e.preventDefault();
     if (!window.confirm('ยืนยันการลบรูปภาพ?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/blog-posts/${blogPost.id}/images/${imageId}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/blog-posts/${blogPost.id}/images/${imageId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -151,7 +151,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/api/tags',
+        'http://192.168.1.165:3000/api/tags',
         { name: newTag.trim() },
         {
           headers: {
@@ -221,7 +221,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
             const imageFormData = new FormData();
             imageFormData.append('image', image);
             await axios.post(
-              `http://localhost:3000/api/blog-posts/${blogPost.id}/images`,
+              `http://192.168.1.165:3000/api/blog-posts/${blogPost.id}/images`,
               imageFormData,
               {
                 headers: {

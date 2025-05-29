@@ -24,7 +24,7 @@ function Home() {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get('http://localhost:3000/api/movies');
+        const response = await axios.get('http://192.168.1.165:3000/api/movies');
         setMovies(response.data);
         localStorage.setItem('cachedMovies', JSON.stringify(response.data));
       } catch (error) {

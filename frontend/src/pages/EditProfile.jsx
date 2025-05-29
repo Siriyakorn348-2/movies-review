@@ -73,7 +73,7 @@ function EditProfile() {
       }
 
       console.log('Sending PUT request to /api/auth/profile');
-      const response = await axios.put('http://localhost:3000/api/auth/profile', data, {
+      const response = await axios.put('http://192.168.1.165:3000/api/auth/profile', data, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

@@ -17,7 +17,7 @@ function WatchList() {
       const fetchFavorites = async () => {
         try {
           setLoading(true);
-          const response = await axios.get('http://localhost:3000/api/favorites', {
+          const response = await axios.get('http://192.168.1.165:3000/api/favorites', {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });
           setFavorites(response.data);
@@ -37,7 +37,7 @@ function WatchList() {
 
   const handleRemove = async (movieId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/favorites/${movieId}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/favorites/${movieId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setFavorites((prev) => prev.filter((f) => f.movie.apiId !== movieId));

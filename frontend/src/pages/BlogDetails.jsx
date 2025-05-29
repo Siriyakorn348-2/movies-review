@@ -32,7 +32,7 @@ function BlogDetails() {
         throw new Error('รหัสโพสต์ไม่ถูกต้อง');
       }
       console.log('Fetching post with ID:', postId);
-      const response = await axios.get(`http://localhost:3000/api/blog-posts/${postId}`, {
+      const response = await axios.get(`http://192.168.1.165:3000/api/blog-posts/${postId}`, {
         headers: user ? { Authorization: `Bearer ${localStorage.getItem('token')}` } : {},
       });
       console.log('Fetched blog post:', response.data);
@@ -41,7 +41,7 @@ function BlogDetails() {
 
       if (user) {
         setIsSaveLoading(true);
-        const savedResponse = await axios.get('http://localhost:3000/api/saved-blog-posts', {
+        const savedResponse = await axios.get('http://192.168.1.165:3000/api/saved-blog-posts', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         console.log('Fetched saved posts:', savedResponse.data);
@@ -81,7 +81,7 @@ function BlogDetails() {
     }
     console.log('Sending request with postId:', postId);
     if (isSaved) {
-      const response = await axios.delete(`http://localhost:3000/api/saved-blog-posts/${postId}`, {
+      const response = await axios.delete(`http://192.168.1.165:3000/api/saved-blog-posts/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       console.log('ยกเลิกการบันทึกสำเร็จ:', response.data);
@@ -93,7 +93,7 @@ function BlogDetails() {
       while (attempts < maxAttempts) {
         try {
           const response = await axios.post(
-            'http://localhost:3000/api/saved-blog-posts',
+            'http://192.168.1.165:3000/api/saved-blog-posts',
             { blogPostId: postId },
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
@@ -138,7 +138,7 @@ function BlogDetails() {
     }
     try {
       await axios.post(
-        'http://localhost:3000/api/comments',
+        'http://192.168.1.165:3000/api/comments',
         {
           commentableId: Number(id),
           commentableType: 'BlogPost',
@@ -158,7 +158,7 @@ function BlogDetails() {
   const handleDelete = async () => {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/blog-posts/${id}`, {
+      await axios.delete(`http://192.168.1.165:3000/api/blog-posts/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       navigate('/blogs');
@@ -177,7 +177,7 @@ function BlogDetails() {
   try {
     console.log('Updating post with data:', updatedPost); 
     const response = await axios.put(
-      `http://localhost:3000/api/blog-posts/${id}`,
+      `http://192.168.1.165:3000/api/blog-posts/${id}`,
       updatedPost,
       {
         headers: {

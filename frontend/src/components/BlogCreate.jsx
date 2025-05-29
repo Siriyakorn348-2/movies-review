@@ -23,7 +23,7 @@ function BlogCreate() {
     setTags([]);
     const fetchTags = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/tags', {
+        const response = await axios.get('http://192.168.1.165:3000/api/tags', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -104,7 +104,7 @@ function BlogCreate() {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/api/tags',
+        'http://192.168.1.165:3000/api/tags',
         { name: newTag.trim() },
         {
           headers: {
@@ -159,7 +159,7 @@ function BlogCreate() {
     try {
       console.log('Submitting blog post with tags:', tags);
       const postResponse = await axios.post(
-        'http://localhost:3000/api/blog-posts',
+        'http://192.168.1.165:3000/api/blog-posts',
         {
           title: form.title,
           content: form.content,
@@ -180,7 +180,7 @@ function BlogCreate() {
             const imageFormData = new FormData();
             imageFormData.append('image', image);
             await axios.post(
-              `http://localhost:3000/api/blog-posts/${postResponse.data.id}/images`,
+              `http://192.168.1.165:3000/api/blog-posts/${postResponse.data.id}/images`,
               imageFormData,
               {
                 headers: {

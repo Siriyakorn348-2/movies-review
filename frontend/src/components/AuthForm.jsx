@@ -25,7 +25,7 @@ function AuthForm() {
       const payload = isLogin
         ? { email: formData.email, password: formData.password }
         : formData;
-      const response = await axios.post(`http://localhost:3000${endpoint}`, payload, {
+      const response = await axios.post(`http://192.168.1.165:3000${endpoint}`, payload, {
         headers: { 'Content-Type': 'application/json' },
       });
       localStorage.setItem('token', response.data.token);

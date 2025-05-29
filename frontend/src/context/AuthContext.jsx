@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
     console.log('Token on refresh:', token);
     if (token) {
       try {
-        const response = await axios.get('http://localhost:3000/api/auth/me', {
+        const response = await axios.get('http://192.168.1.165:3000/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Refreshed user:', response.data.user);
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
       console.log('Token on load:', token);
       if (token) {
         try {
-          const response = await axios.get('http://localhost:3000/api/auth/me', {
+          const response = await axios.get('http://192.168.1.165:3000/api/auth/me', {
             headers: { Authorization: `Bearer ${token}` },
           });
           console.log('Fetched user:', response.data.user);
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
+      const response = await axios.post('http://192.168.1.165:3000/api/auth/login', { email, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       return response.data;

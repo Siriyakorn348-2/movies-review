@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       axios
-        .get('http://localhost:3000/api/auth/me', {
+        .get('http://192.168.1.165:3000/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await axios.post('http://localhost:3000/api/auth/login', {
+    const response = await axios.post('http://192.168.1.165:3000/api/auth/login', {
       email,
       password,
     });
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (email, password, username) => {
-    const response = await axios.post('http://localhost:3000/api/auth/register', {
+    const response = await axios.post('http://192.168.1.165:3000/api/auth/register', {
       email,
       password,
       username,
