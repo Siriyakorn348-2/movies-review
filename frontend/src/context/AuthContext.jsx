@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -8,10 +7,33 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    const token = localStorage.getItem('token');
+    console.log('Token on refresh:', token);
+    if (token) {
+      try {
+        const response = await axios.get('http://localhost:3000/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Refreshed user:', response.data.user);
+        setUser(response.data.user);
+      } catch (error) {
+        console.error('Failed to refresh user:', error.response?.status, error.message);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token'); 
+          setUser(null);
+        }
+      }
+    } else {
+      console.log('No token found for refresh');
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('token');
-      console.log('Token on load:', token); 
+      console.log('Token on load:', token);
       if (token) {
         try {
           const response = await axios.get('http://localhost:3000/api/auth/me', {
@@ -22,7 +44,7 @@ export function AuthProvider({ children }) {
         } catch (error) {
           console.error('Failed to fetch user:', error.response?.status, error.message);
           if (error.response?.status === 401) {
-            localStorage.removeItem('token'); // ลบ token ถ้าไม่ถูกต้อง
+            localStorage.removeItem('token');
           }
           setUser(null);
         }
@@ -55,7 +77,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

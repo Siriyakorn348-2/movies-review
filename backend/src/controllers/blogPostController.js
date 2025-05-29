@@ -51,7 +51,6 @@ exports.updateBlogPost = async (req, res, next) => {
     if (!title || !content) {
       return res.status(400).json({ error: 'กรุณาระบุ title และ content' });
     }
-    // ตรวจสอบ tags
     let validTags = [];
     if (tags !== undefined && tags !== null) {
       if (!Array.isArray(tags)) {

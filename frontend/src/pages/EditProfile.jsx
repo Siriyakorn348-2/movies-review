@@ -4,15 +4,14 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 function EditProfile() {
-  const { user, setUser, refreshUser } = useAuth(); 
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     username: '',
-    password: '',
   });
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(user?.img || '');
+  const [preview, setPreview] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +20,6 @@ function EditProfile() {
       setFormData({
         email: user.email || '',
         username: user.username || '',
-        password: '',
       });
       setPreview(user.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png');
     }
@@ -34,8 +32,17 @@ function EditProfile() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(selectedFile.type)) {
+        setError('กรุณาอัปโหลดไฟล์รูปภาพ (.jpg, .jpeg, .png เท่านั้น)');
+        return;
+      }
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError('ไฟล์มีขนาดใหญ่เกิน 5MB');
+        return;
+      }
       setFile(selectedFile);
       setPreview(URL.createObjectURL(selectedFile));
+      setError(null);
     }
   };
 
@@ -46,19 +53,26 @@ function EditProfile() {
 
     try {
       const token = localStorage.getItem('token');
-      console.log('Token:', token);
       if (!token) {
         setError('กรุณาเข้าสู่ระบบใหม่');
-        setLoading(false);
+        return;
+      }
+
+      if (!formData.email || !formData.username) {
+        setError('กรุณากรอกอีเมลและชื่อผู้ใช้');
         return;
       }
 
       const data = new FormData();
       data.append('email', formData.email);
       data.append('username', formData.username);
-      if (formData.password) data.append('password', formData.password);
       if (file) data.append('img', file);
 
+      for (let [key, value] of data.entries()) {
+        console.log(`FormData: ${key}=`, value);
+      }
+
+      console.log('Sending PUT request to /api/auth/profile');
       const response = await axios.put('http://localhost:3000/api/auth/profile', data, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -66,20 +80,35 @@ function EditProfile() {
         },
       });
 
-      // อัปเดต user ใน AuthContext และรีเฟรชข้อมูล
-      setUser(response.data.user);
-      await refreshUser(); // เรียก refreshUser เพื่อดึงข้อมูลล่าสุดจาก API
+      console.log('Update profile response:', response.data);
+      await refreshUser();
       alert('แก้ไขโปรไฟล์สำเร็จ');
       navigate('/profile');
     } catch (error) {
-      console.error('Failed to update profile:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถแก้ไขโปรไฟล์ได้ กรุณาลองใหม่');
+      console.error('Failed to update profile:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          data: error.config?.data,
+        },
+      });
+      setError(
+        error.response?.data?.error ||
+          error.message ||
+          'ไม่สามารถแก้ไขโปรไฟล์ได้ กรุณาลองใหม่'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user) return <div className="text-center py-10">กรุณาเข้าสู่ระบบ</div>;
+  if (!user) return <div className="text-center py-10 text-white">กรุณาเข้าสู่ระบบ</div>;
 
   return (
     <div className="max-w-md mx-auto bg-black p-6 rounded-lg shadow-md mt-10 font-['Helvetica Neue', 'Sarabun']">
@@ -94,12 +123,12 @@ function EditProfile() {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-400 mb-2">รูปโปรไฟล์ (รองรับ .jpg, .jpeg, .png)</label>
+          <label className="block text-gray-400 mb-2">รูปโปรไฟล์</label>
           <input
             type="file"
             accept="image/jpeg,image/jpg,image/png"
             onChange={handleFileChange}
-            className="w-full p-3 bg-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 bg-gray-800 rounded-md text-white"
           />
         </div>
         <div className="mb-4">
@@ -110,29 +139,20 @@ function EditProfile() {
             value={formData.email}
             onChange={handleChange}
             className="w-full p-3 bg-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="กรอกอีเมล"
+            placeholder="Email"
+            required
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-400 mb-2">ชื่อผู้ใช้</label>
+          <label className="block text-gray-400 mb-2">ชื่อ</label>
           <input
             type="text"
             name="username"
             value={formData.username}
             onChange={handleChange}
             className="w-full p-3 bg-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="กรอกชื่อผู้ใช้"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-400 mb-2">รหัสผ่านใหม่ (ถ้าต้องการเปลี่ยน)</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full p-3 bg-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="กรอกรหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)"
+            placeholder="Username"
+            required
           />
         </div>
         <div className="flex justify-between">

@@ -113,7 +113,6 @@ exports.updateProfile = async (req, res, next) => {
     if (username) updateData.username = username;
     if (password) updateData.password = password;
 
-    // ถ้ามีไฟล์รูปภาพ ให้อัปโหลดไป Cloudinary
     if (req.file) {
       console.log('Uploading file to Cloudinary:', req.file.path);
       const result = await cloudinary.uploader.upload(req.file.path, {
@@ -125,7 +124,6 @@ exports.updateProfile = async (req, res, next) => {
       updateData.img = result.secure_url;
       console.log('Cloudinary upload successful:', result.secure_url);
 
-      // ลบไฟล์ชั่วคราวหลังอัปโหลด
       try {
         const fs = require('fs');
         if (fs.existsSync(req.file.path)) {

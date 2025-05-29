@@ -224,14 +224,7 @@ function BlogDetails() {
 
   return (
     <div className="max-w-5xl mx-auto bg-black p-8 rounded-xl shadow-2xl font-['Helvetica Neue', 'Sarabun'] text-white mt-10 mb-6">
-      {user && !user.img && (
-        <div className="text-yellow-500 text-center mb-4">
-          <Link to="/edit-profile" className="underline">
-            อัปโหลดรูปโปรไฟล์
-          </Link>{' '}
-          เพื่อปรับปรุงประสบการณ์
-        </div>
-      )}
+      
       <ImageModal
         images={showAllImages ? blogPost.images : null}
         initialImageUrl={selectedImage}

@@ -163,8 +163,8 @@ const updateBlogPost = async (id, userId, data) => {
         title,
         content,
         tags: {
-          deleteMany: {}, // ลบแท็กเก่าทั้งหมด
-          create: tagData, // สร้างการเชื่อมโยงแท็กใหม่
+          deleteMany: {}, 
+          create: tagData, 
         },
       },
       include: {
