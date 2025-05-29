@@ -1,4 +1,3 @@
-// src/services/savedBlogPostService.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -26,14 +25,12 @@ const getSavedBlogPostsByUserId = async (userId) => {
 
 const saveBlogPost = async (userId, blogPostId) => {
   try {
-    // ตรวจสอบว่า blogPost มีอยู่จริง
     const blogPost = await prisma.blogPost.findUnique({
       where: { id: Number(blogPostId) },
     });
     if (!blogPost) {
       throw new Error('ไม่พบโพสต์ที่ต้องการบันทึก');
     }
-    // ตรวจสอบว่าบันทึกซ้ำหรือไม่
     const existingSavedPost = await prisma.savedBlogPost.findUnique({
       where: { userId_blogPostId: { userId, blogPostId: Number(blogPostId) } },
     });

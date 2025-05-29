@@ -15,6 +15,9 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const MAX_IMAGES = 5;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -30,7 +33,43 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+    const validFiles = files.filter((file) => {
+      if (!file.type.startsWith('image/')) {
+        setError('กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ');
+        return false;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`ไฟล์ ${file.name} มีขนาดใหญ่เกิน 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (existingImages.length + images.length + validFiles.length > MAX_IMAGES) {
+      setError(`คุณสามารถมีรูปภาพได้สูงสุด ${MAX_IMAGES} รูป`);
+      return;
+    }
+
+    setImages((prev) => [...prev, ...validFiles]);
+    setError(null);
+  };
+
+  const handleRemoveImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteImage = async (imageId) => {
+    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?')) return;
+    try {
+      await axios.delete(`http://localhost:3000/api/blog-posts/${blogPost.id}/images/${imageId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setExistingImages((prev) => prev.filter((image) => image.id !== imageId));
+      setError(null);
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+      setError(error.response?.data?.error || 'ไม่สามารถลบรูปภาพได้ กรุณาลองใหม่');
+    }
   };
 
   const handleTagToggle = (tagId) => {
@@ -115,21 +154,6 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     }
   };
 
-  const handleDeleteImage = async (imageId) => {
-    if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?')) return;
-    try {
-      await axios.delete(`http://localhost:3000/api/blog-posts/${blogPost.id}/images/${imageId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      const response = await axios.get(`http://localhost:3000/api/blog-posts/${blogPost.id}`);
-      setExistingImages(response.data.images || []);
-      setError(null);
-    } catch (error) {
-      console.error('Failed to delete image:', error);
-      setError(error.response?.data?.error || 'ไม่สามารถลบรูปภาพได้ กรุณาลองใหม่');
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -137,19 +161,37 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
       await onSubmit({ ...form, tags });
 
       if (images.length > 0) {
-        for (const image of images) {
-          const imageFormData = new FormData();
-          imageFormData.append('image', image);
-          await axios.post(
-            `http://localhost:3000/api/blog-posts/${blogPost.id}/images`,
-            imageFormData,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
+        const uploadPromises = images.map(async (image, index) => {
+          try {
+            const imageFormData = new FormData();
+            imageFormData.append('image', image);
+            await axios.post(
+              `http://localhost:3000/api/blog-posts/${blogPost.id}/images`,
+              imageFormData,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  'Content-Type': 'multipart/form-data',
+                },
+              }
+            );
+            return { success: true, index };
+          } catch (error) {
+            return {
+              success: false,
+              index,
+              error: `การอัปโหลดรูปภาพ ${image.name} ล้มเหลว: ${
+                error.response?.data?.error || error.message
+              }`,
+            };
+          }
+        });
+
+        const results = await Promise.all(uploadPromises);
+        const errors = results.filter((result) => !result.success);
+        if (errors.length > 0) {
+          setError(errors.map((e) => e.error).join('; '));
+          return;
         }
       }
 
@@ -253,7 +295,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           </div>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">รูปภาพที่มีอยู่</label>
+          <label className="block mb-1">รูปภาพที่มีอยู่ (สูงสุด {MAX_IMAGES} รูป)</label>
           {existingImages.length > 0 ? (
             <div className="flex gap-2 flex-wrap">
               {existingImages.map((image) => (
@@ -287,14 +329,22 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
             className="w-full p-2 bg-[#2A2A2A] rounded-md text-white"
           />
           {images.length > 0 && (
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {images.map((image, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(image)}
-                  alt="Preview"
-                  className="w-[80px] h-[80px] rounded-md object-cover"
-                />
+                <div key={index} className="relative">
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt="Preview"
+                    className="w-[80px] h-[80px] rounded-md object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                  >
+                    X
+                  </button>
+                </div>
               ))}
             </div>
           )}

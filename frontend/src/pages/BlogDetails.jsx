@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -28,7 +27,7 @@ function BlogDetails() {
 
   const fetchPost = async () => {
     try {
-      const postId = Number(id);
+      const postId = Number(id); // แปลง id เป็น Number
       if (isNaN(postId)) {
         throw new Error('รหัสโพสต์ไม่ถูกต้อง');
       }
@@ -46,7 +45,8 @@ function BlogDetails() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         console.log('Fetched saved posts:', savedResponse.data);
-        const savedPostIds = savedResponse.data.map((savedPost) => Number(savedPost.blogPost.id));
+        // แปลง blogPostId เป็น Number เพื่อให้การเปรียบเทียบสอดคล้องกัน
+        const savedPostIds = savedResponse.data.map((savedPost) => savedPost.blogPostId);
         console.log('Saved post IDs:', savedPostIds, 'Current post ID:', postId);
         setIsSaved(savedPostIds.includes(postId));
         setIsSaveLoading(false);
@@ -69,55 +69,68 @@ function BlogDetails() {
   }, [id]);
 
   const handleSaveBlog = async () => {
-    if (!user) {
-      setError('กรุณาเข้าสู่ระบบเพื่อบันทึกโพสต์');
-      return;
+  if (!user) {
+    setError('กรุณาเข้าสู่ระบบเพื่อบันทึกโพสต์');
+    return;
+  }
+  try {
+    setSaveMessage(null);
+    setIsSaveLoading(true);
+    const postId = Number(id);
+    if (isNaN(postId)) {
+      throw new Error('รหัสโพสต์ไม่ถูกต้อง');
     }
-    try {
-      setSaveMessage(null);
-      setIsSaveLoading(true);
-      const postId = Number(id);
-      if (isSaved) {
-        const response = await axios.delete(`http://localhost:3000/api/saved-blog-posts/${postId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        console.log('Unsave response:', response.data);
-        setIsSaved(false);
-        setSaveMessage('ยกเลิกบันทึกโพสต์สำเร็จ');
-      } else {
-        // ลอง 3 ครั้ง
-        let attempts = 0;
-        const maxAttempts = 3;
-        while (attempts < maxAttempts) {
-          try {
-            const response = await axios.post(
-              'http://localhost:3000/api/saved-blog-posts', // แก้ URL
-              { blogPostId: postId },
-              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-            );
-            console.log('Saved post response:', response.data);
+    console.log('Sending request with postId:', postId);
+    if (isSaved) {
+      const response = await axios.delete(`http://localhost:3000/api/saved-blog-posts/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      console.log('ยกเลิกการบันทึกสำเร็จ:', response.data);
+      setIsSaved(false);
+      setSaveMessage('ยกเลิกบันทึกโพสต์สำเร็จ');
+    } else {
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts) {
+        try {
+          const response = await axios.post(
+            'http://localhost:3000/api/saved-blog-posts',
+            { blogPostId: postId },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          console.log('บันทึกโพสต์สำเร็จ:', response.data);
+          setIsSaved(true);
+          setSaveMessage('บันทึกโพสต์สำเร็จ');
+          break;
+        } catch (err) {
+          attempts++;
+          console.warn(`พยายามครั้งที่ ${attempts} ล้มเหลว:`, err.response?.data || err);
+          if (err.response?.data?.error === 'โพสต์นี้ถูกบันทึกแล้ว') {
+            // ถ้าโพสต์ถูกบันทึกแล้ว ให้อัปเดตสถานะ isSaved
             setIsSaved(true);
-            setSaveMessage('บันทึกโพสต์สำเร็จ');
+            setSaveMessage('โพสต์นี้ถูกบันทึกแล้ว');
             break;
-          } catch (err) {
-            attempts++;
-            console.warn(`Attempt ${attempts} failed:`, err.response?.data || err);
-            if (attempts === maxAttempts || err.response?.status !== 404) {
-              throw err;
-            }
+          }
+          if (attempts === maxAttempts || err.response?.status !== 404) {
+            throw err;
           }
         }
       }
-      await fetchPost();
-    } catch (error) {
-      console.error('Error saving blog post:', error.response?.data || error);
-      setError(
-        error.response?.data?.error || 'ไม่สามารถบันทึก/ยกเลิกบันทึกได้ กรุณาลองใหม่'
-      );
-    } finally {
-      setIsSaveLoading(false);
     }
-  };
+    await fetchPost();
+  } catch (error) {
+    console.error('ข้อผิดพลาดในการบันทึกโพสต์:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    setError(
+      error.response?.data?.error || 'ไม่สามารถบันทึก/ยกเลิกบันทึกได้ กรุณาลองใหม่'
+    );
+  } finally {
+    setIsSaveLoading(false);
+  }
+};
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();

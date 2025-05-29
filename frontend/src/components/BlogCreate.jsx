@@ -11,9 +11,12 @@ function BlogCreate() {
   const [availableTags, setAvailableTags] = useState([]);
   const [images, setImages] = useState([]);
   const [newTag, setNewTag] = useState('');
-  const [editingTag, setEditingTag] = useState(null); 
+  const [editingTag, setEditingTag] = useState(null);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const MAX_IMAGES = 5;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -30,7 +33,29 @@ function BlogCreate() {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+    const validFiles = files.filter((file) => {
+      if (!file.type.startsWith('image/')) {
+        setError('กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ');
+        return false;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`ไฟล์ ${file.name} มีขนาดใหญ่เกิน 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (images.length + validFiles.length > MAX_IMAGES) {
+      setError(`คุณสามารถอัปโหลดรูปภาพได้สูงสุด ${MAX_IMAGES} รูป`);
+      return;
+    }
+
+    setImages((prev) => [...prev, ...validFiles]);
+    setError(null);
+  };
+
+  const handleRemoveImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleTagToggle = (tagId) => {
@@ -139,19 +164,37 @@ function BlogCreate() {
       );
 
       if (images.length > 0) {
-        for (const image of images) {
-          const imageFormData = new FormData();
-          imageFormData.append('image', image);
-          await axios.post(
-            `http://localhost:3000/api/blog-posts/${postResponse.data.id}/images`,
-            imageFormData,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
+        const uploadPromises = images.map(async (image, index) => {
+          try {
+            const imageFormData = new FormData();
+            imageFormData.append('image', image);
+            await axios.post(
+              `http://localhost:3000/api/blog-posts/${postResponse.data.id}/images`,
+              imageFormData,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  'Content-Type': 'multipart/form-data',
+                },
+              }
+            );
+            return { success: true, index };
+          } catch (error) {
+            return {
+              success: false,
+              index,
+              error: `การอัปโหลดรูปภาพ ${image.name} ล้มเหลว: ${
+                error.response?.data?.error || error.message
+              }`,
+            };
+          }
+        });
+
+        const results = await Promise.all(uploadPromises);
+        const errors = results.filter((result) => !result.success);
+        if (errors.length > 0) {
+          setError(errors.map((e) => e.error).join('; '));
+          return;
         }
       }
 
@@ -164,14 +207,15 @@ function BlogCreate() {
     }
   };
 
+  const handleCancel = () => {
+    navigate('/blogs');
+  };
+
   if (!user) return <div className="text-white text-center">กรุณาเข้าสู่ระบบเพื่อสร้างบล็อก</div>;
 
   return (
-    <div className="bg-[#1A1C29] text-white min-h-screen p-4 sm:p-6 md:p-8 font-['Sarabun']">
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-md mx-auto bg-[#141414] p-6 rounded-lg shadow-lg"
-      >
+    <div className="max-w-5xl	 mx-auto bg-[#141414] p-10 rounded-lg shadow-lg">
+      <form onSubmit={handleSubmit}>
         <h2 className="text-2xl font-bold mb-4">สร้างบล็อกใหม่</h2>
         {error && <div className="text-red-500 mb-4">{error}</div>}
         <div className="mb-4">
@@ -208,13 +252,19 @@ function BlogCreate() {
                 >
                   {tag.name}
                 </button>
-               
+                <button
+                  type="button"
+                  onClick={() => handleEditTag(tag)}
+                  className="text-blue-600 hover:underline text-xs"
+                >
+                  แก้ไข
+                </button>
                 <button
                   type="button"
                   onClick={() => handleDeleteTag(tag.id)}
                   className="text-red-600 hover:underline text-xs"
                 >
-                  X
+                  ลบ
                 </button>
               </div>
             ))}
@@ -252,7 +302,7 @@ function BlogCreate() {
           </div>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">อัปโหลดรูปภาพ</label>
+          <label className="block mb-1">อัปโหลดรูปภาพ (สูงสุด {MAX_IMAGES} รูป)</label>
           <input
             type="file"
             multiple
@@ -260,26 +310,45 @@ function BlogCreate() {
             onChange={handleImageUpload}
             className="w-full p-2 bg-[#2A2A2A] rounded-md text-white"
           />
-          {images.length > 0 && (
-            <div className="flex gap-2 mt-2">
+          {images.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mt-2">
               {images.map((image, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(image)}
-                  alt="Preview"
-                  className="w-[80px] h-[80px] rounded-md object-cover"
-                />
+                <div key={index} className="relative">
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt="Preview"
+                    className="w-[80px] h-[80px] rounded-md object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                  >
+                    X
+                  </button>
+                </div>
               ))}
             </div>
+          ) : (
+            <p className="text-gray-400">ไม่มีรูปภาพ</p>
           )}
         </div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700 disabled:bg-gray-600"
-        >
-          {isSubmitting ? 'กำลังสร้าง...' : 'สร้าง'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 disabled:bg-gray-600"
+          >
+            {isSubmitting ? 'กำลังสร้าง...' : 'สร้าง'}
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700"
+          >
+            ยกเลิก
+          </button>
+        </div>
       </form>
     </div>
   );

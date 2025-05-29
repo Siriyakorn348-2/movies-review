@@ -15,37 +15,41 @@ function Blogs() {
   const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
 
   useEffect(() => {
-    const fetchBlogPosts = async () => {
-      try {
-        const params = new URLSearchParams(location.search);
-        const tagId = params.get('tag');
-        let url = 'http://localhost:3000/api/blog-posts';
-        if (tagId) {
-          url = `http://localhost:3000/api/blog-posts/tag/${tagId}`;
-        }
-        const response = await axios.get(url);
-        setBlogPosts(response.data);
-        setError(null);
-        setVisibleCount(POSTS_PER_PAGE); 
-      } catch (error) {
-        console.error('Failed to fetch blog posts:', error);
-        setError('ไม่สามารถโหลดบล็อกได้ กรุณาลองใหม่');
+  const fetchBlogPosts = async () => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const tagId = params.get('tag');
+      let url = 'http://localhost:3000/api/blog-posts';
+      if (tagId) {
+        url = `http://localhost:3000/api/blog-posts/tag/${tagId}`;
       }
-    };
+      const response = await axios.get(url);
+      // เรียงลำดับโพสต์จากใหม่ไปเก่า
+      const sortedPosts = response.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setBlogPosts(sortedPosts);
+      setError(null);
+      setVisibleCount(POSTS_PER_PAGE);
+    } catch (error) {
+      console.error('Failed to fetch blog posts:', error);
+      setError('ไม่สามารถโหลดบล็อกได้ กรุณาลองใหม่');
+    }
+  };
 
-    const fetchTags = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/tags');
-        setAvailableTags(response.data);
-      } catch (error) {
-        console.error('Failed to fetch tags:', error);
-        setError('ไม่สามารถโหลดแท็กได้');
-      }
-    };
+  const fetchTags = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/tags');
+      setAvailableTags(response.data);
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+      setError('ไม่สามารถโหลดแท็กได้');
+    }
+  };
 
-    fetchBlogPosts();
-    fetchTags();
-  }, [location.search]);
+  fetchBlogPosts();
+  fetchTags();
+}, [location.search]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?')) return;
@@ -67,8 +71,6 @@ function Blogs() {
   };
 
   const visiblePosts = blogPosts.slice(0, visibleCount);
-  const leftColumn = visiblePosts.filter((_, index) => index % 2 === 0);
-  const rightColumn = visiblePosts.filter((_, index) => index % 2 !== 0);
 
   return (
     <div className="bg-[#1A1C29] text-white min-h-screen p-4 sm:p-6 md:p-8 font-['Sarabun']">
@@ -87,17 +89,10 @@ function Blogs() {
       {error && <div className="text-red-500 mb-4">{error}</div>}
       {blogPosts.length === 0 && !error && <div>ไม่มีบล็อกในขณะนี้</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          {leftColumn.map((post) => (
-            <BlogPostCard key={post.id} blogPost={post} onDelete={handleDelete} />
-          ))}
-        </div>
-        <div className="space-y-4">
-          {rightColumn.map((post) => (
-            <BlogPostCard key={post.id} blogPost={post} onDelete={handleDelete} />
-          ))}
-        </div>
+      <div className="space-y-4">
+        {visiblePosts.map((post) => (
+          <BlogPostCard key={post.id} blogPost={post} onDelete={handleDelete} />
+        ))}
       </div>
 
       {visibleCount < blogPosts.length && (
