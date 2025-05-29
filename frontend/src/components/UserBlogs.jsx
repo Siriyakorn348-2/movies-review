@@ -1,4 +1,3 @@
-// src/components/UserBlogs.js
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import BlogPostCard from './BlogPostCard';
@@ -39,12 +38,12 @@ function UserBlogs() {
   if (!user) return <div className="text-gray-400 text-center py-10">กรุณาเข้าสู่ระบบ</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-5">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold text-white">บล็อกของฉัน</h2>
         <Link
           to="/blogs/create"
-          className="bg-blue-200 text-white px-5 py-2 rounded-lg hover:bg-blue-300 transition duration-300 shadow-md"
+          className="bg-blue-200 text-white px-5 py-2 rounded-lg hover:bg-blue-400 transition duration-300 shadow-md"
         >
           สร้างบล็อกใหม่
         </Link>

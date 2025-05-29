@@ -1,34 +1,48 @@
-// src/pages/Profile.js
-import { useNavigate, Navigate, Link } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import UserBlogs from '../components/UserBlogs';
-import SavedBlogPosts from './SavedBlogPosts'; 
-import { useState } from 'react';
+import SavedBlogPosts from './SavedBlogPosts';
+import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { TabContext, TabList, TabPanel } from '@mui/lab';
+import { Box, Tab } from '@mui/material';
 
 function Profile() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('myBlogs');
+  const [value, setValue] = useState('1');
+  const tab1Ref = useRef(null);
+  const tab2Ref = useRef(null);
+  const [tab1Width, setTab1Width] = useState(0);
+  const [tab2Width, setTab2Width] = useState(0);
+  const [tab1Left, setTab1Left] = useState(0);
+  const [tab2Left, setTab2Left] = useState(0);
 
-  // รอจนกว่า loading จะเสร็จ
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
+
+  useEffect(() => {
+    if (tab1Ref.current) {
+      const rect1 = tab1Ref.current.getBoundingClientRect();
+      setTab1Width(rect1.width);
+      setTab1Left(rect1.left - tab1Ref.current.parentElement.getBoundingClientRect().left);
+    }
+    if (tab2Ref.current) {
+      const rect2 = tab2Ref.current.getBoundingClientRect();
+      setTab2Width(rect2.width);
+      setTab2Left(rect2.left - tab2Ref.current.parentElement.getBoundingClientRect().left);
+    }
+  }, []);
+
   if (loading) {
     return <div className="text-gray-400 text-center py-10">กำลังโหลด...</div>;
   }
 
-  // ถ้าไม่มี user หลังจากโหลดเสร็จ ให้ redirect
   if (!user) return <Navigate to="/login" />;
 
   const handleEditProfile = () => {
     navigate('/edit-profile');
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
   };
 
   console.log('User in Profile:', user);
@@ -50,55 +64,70 @@ function Profile() {
           <h1 className="text-3xl font-bold text-white mb-2">{user.username}</h1>
           <p className="text-gray-400 text-lg">{user.email}</p>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-4 mb-10">
         <button
           onClick={handleEditProfile}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md"
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md sm:ml-auto"
         >
           แก้ไขโปรไฟล์
         </button>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition duration-300 shadow-md"
-        >
-          ออกจากระบบ
-        </button>
-      
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6">
-        <div className="flex border-b border-blue-950">
-          <button
-            className={`px-6 py-3 text-lg font-medium transition duration-300 ${
-              activeTab === 'myBlogs'
-                ? 'border-b-2 border-blue-600 text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            onClick={() => setActiveTab('myBlogs')}
+      {/* Tab Section with Material-UI */}
+      <TabContext value={value}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', position: 'relative' }}>
+          <TabList
+            onChange={handleChange}
+            aria-label="profile tabs"
+            sx={{
+              '& .MuiTab-root': {
+                color: 'gray',
+                fontSize: '1.125rem', 
+                fontWeight: 500, 
+                fontFamily: "'Helvetica Neue', 'Sarabun'",
+                padding: '12px 24px', 
+                marginRight: '32px', 
+                textTransform: 'none',
+                outline: 'none', 
+                '&:hover': {
+                  color: 'white',
+                },
+                '&:focus': {
+                  outline: 'none', 
+                },
+                '&:active': {
+                  outline: 'none', 
+                },
+              },
+              '& .Mui-selected': {
+                color: 'white', 
+                outline: 'none', 
+              },
+              '& .MuiTabs-indicator': {
+                display: 'none',
+              },
+            }}
           >
-            บล็อกของฉัน
-          </button>
-          <button
-            className={`px-6 py-3 text-lg font-medium transition duration-300 ${
-              activeTab === 'savedBlogs'
-                ? 'border-b-2 border-blue-600 text-white'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            onClick={() => setActiveTab('savedBlogs')}
-          >
-            บล็อกที่บันทึก
-          </button>
-        </div>
-      </div>
+            <Tab label="บล็อกของฉัน" value="1" ref={tab1Ref} />
+            <Tab label="บล็อกที่บันทึก" value="2" ref={tab2Ref} />
+          </TabList>
 
-      {/* Tab Content */}
-      <div>
-        {activeTab === 'myBlogs' ? <UserBlogs /> : <SavedBlogPosts />}
-      </div>
+          <motion.div
+            className="absolute bottom-0 h-1 bg-blue-400"
+            initial={false}
+            animate={{
+              left: value === '1' ? tab1Left : tab2Left,
+              width: value === '1' ? tab1Width : tab2Width,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
+        </Box>
+        <TabPanel value="1" sx={{ padding: 0 }}>
+          <UserBlogs />
+        </TabPanel>
+        <TabPanel value="2" sx={{ padding: 0 }}>
+          <SavedBlogPosts />
+        </TabPanel>
+      </TabContext>
     </div>
   );
 }

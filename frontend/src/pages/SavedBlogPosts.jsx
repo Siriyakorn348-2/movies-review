@@ -1,4 +1,3 @@
-// src/components/SavedBlogPosts.js
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import BlogPostCard from '../components/BlogPostCard';
@@ -43,7 +42,7 @@ function SavedBlogPosts() {
   if (!user) return <div className="text-gray-400 text-center py-10">กรุณาเข้าสู่ระบบเพื่อดูบล็อกที่บันทึก</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-5">
       <h2 className="text-2xl font-semibold text-white">บล็อกที่บันทึกไว้</h2>
       {error && <div className="text-red-500 text-center">{error}</div>}
       {posts.length === 0 ? (
