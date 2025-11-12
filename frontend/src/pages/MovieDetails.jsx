@@ -4,8 +4,7 @@ import axios from 'axios';
 import GlobalApi from '../Services/GlobalApi';
 import { useAuth } from '../context/AuthContext';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
-import actorimg from '../assets/Images/actorimg.jpg';
-import movieimg from '../assets/Images/movieimg.png';
+
 
 
 function MovieDetails() {
@@ -274,15 +273,15 @@ function MovieDetails() {
         </div>
       )}
 
-      {cast.length > 0 && (
+     {cast.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">นักแสดง</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
             {cast.map((actor) => (
               <div key={actor.id} className="text-center min-w-[150px] flex-shrink-0">
                 <div className="w-[120px] h-[120px] mx-auto rounded-full overflow-hidden bg-gray-700">
-                 <img
-                    src={actor.profile_path ? IMAGE_BASE_URL + actor.profile_path : actorimg}
+                  <img
+                    src={actor.profile_path ? IMAGE_BASE_URL + actor.profile_path : '/images/actorimg.jpg'}
                     alt={actor.name}
                     className="w-full h-full object-cover"
                   />
@@ -294,6 +293,7 @@ function MovieDetails() {
           </div>
         </div>
       )}
+
 
 
       {(director || producer) && (
@@ -442,25 +442,34 @@ function MovieDetails() {
         </div>
       )}
 
-     {similarMovies.length > 0 && (
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">ภาพยนตร์ที่คล้ายกัน</h2>
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
-          {similarMovies.map((movie) => (
-            <Link to={`/movies/${movie.id}`} key={movie.id} className="min-w-[150px] flex-shrink-0">
-              <div className="w-[150px] h-[225px] rounded-lg overflow-hidden bg-gray-700">
-                <img
-                  src={movie.poster_path ? IMAGE_BASE_URL + movie.poster_path : movieimg} 
-                  alt={movie.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <p className="mt-2 text-center">{movie.title}</p>
-            </Link>
-          ))}
+      {similarMovies.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">ภาพยนตร์ที่คล้ายกัน</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
+            {similarMovies.map((movie) => (
+              <Link
+                to={`/movies/${movie.id}`}
+                key={movie.id}
+                className="min-w-[150px] flex-shrink-0"
+              >
+                <div className="w-[150px]">
+                  <img
+                    src={movie.poster_path ? IMAGE_BASE_URL + movie.poster_path : '/placeholder.png'}
+                    alt={movie.title}
+                    className="w-full rounded-lg hover:border-[3px] border-gray-400"
+                  />
+                  <p
+                    className="mt-2 text-center text-sm font-medium truncate"
+                    title={movie.title}
+                  >
+                    {movie.title}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
   );
 }
