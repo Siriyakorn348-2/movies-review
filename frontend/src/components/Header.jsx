@@ -95,12 +95,7 @@ function Header() {
           <Link to={item.path} key={item.name}>
             <button
               onClick={() => navigate(item.path)}
-              className={`flex items-center space-x-2 px-5 py-2 rounded-full transition duration-300 font-medium text-sm tracking-wide cursor-pointer
-                ${
-                  window.location.pathname === item.path
-                    ? 'bg-red-600 text-white shadow-lg'
-                    : 'text-gray-300 bg-transparent border border-red-600 hover:bg-red-600 hover:text-white hover:shadow-md'
-                }`}
+              className="flex items-center space-x-2 px-5 py-2 rounded-full transition duration-300 font-medium text-sm tracking-wide cursor-pointer bg-black text-white shadow-md"
             >
               <item.icon className="text-lg" />
               <span>{item.name}</span>
@@ -110,48 +105,54 @@ function Header() {
       </div>
 
       {/* Mobile Menu */}
-      <div className="flex md:hidden gap-5 items-center">
-        {menu.slice(0, 2).map((item) => (
-          <Link to={item.path} key={item.name}>
-            <button className="text-gray-300">
-              <item.icon className="text-2xl" />
-            </button>
-          </Link>
-        ))}
-        <div className="md:hidden" onClick={() => setToggle(!toggle)}>
-          <button className="text-gray-300">
-            <HiDotsVertical className="text-2xl" />
+    <div className="flex md:hidden gap-5 items-center">
+      {menu.slice(0, 2).map((item) => (
+        <Link to={item.path} key={item.name}>
+          <button className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-full shadow-md">
+            <item.icon className="text-2xl" />
           </button>
-          {toggle && (
-            <div className="absolute right-4 top-16 mt-3 bg-[#141414] border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg">
-              {menu.slice(2).map((item) => (
-                <Link
-                  to={item.path}
-                  key={item.name}
-                  onClick={() => setToggle(false)}
-                >
-                  <div className="flex items-center gap-2 text-gray-300 hover:text-white py-2">
-                    <item.icon className="text-lg" />
-                    <span>{item.name}</span>
-                  </div>
-                </Link>
-              ))}
-              {user && (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setToggle(false);
-                  }}
-                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
-                >
-                  <HiArrowRightOnRectangle className="text-lg" />
-                  <span>ออกจากระบบ</span>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        </Link>
+      ))}
+      
+      <div className="relative">
+        <button
+          onClick={() => setToggle(!toggle)}
+          className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-full shadow-md"
+        >
+          <HiDotsVertical className="text-2xl" />
+        </button>
+
+        {toggle && (
+          <div className="absolute right-0 mt-3 bg-black border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg">
+            {menu.slice(2).map((item) => (
+              <Link
+                to={item.path}
+                key={item.name}
+                onClick={() => setToggle(false)}
+              >
+                <div className="flex items-center gap-2 text-white hover:text-gray-300 py-2">
+                  <item.icon className="text-lg" />
+                  <span>{item.name}</span>
+                </div>
+              </Link>
+            ))}
+
+            {user && (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setToggle(false);
+                }}
+                className="flex items-center gap-2 text-white hover:text-gray-300 py-2 w-full text-left"
+              >
+                <HiArrowRightOnRectangle className="text-lg" />
+                <span>ออกจากระบบ</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
+    </div>
 
       <div className="hidden md:flex items-center space-x-4 relative">
         <div className="relative" ref={searchRef}>
