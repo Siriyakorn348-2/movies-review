@@ -15,6 +15,8 @@ function EditProfile() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -72,8 +74,7 @@ function EditProfile() {
         console.log(`FormData: ${key}=`, value);
       }
 
-      console.log('Sending PUT request to /api/auth/profile');
-      const response = await axios.put('http://192.168.1.165:3000/api/auth/profile', data, {
+      const response = await axios.put(`${API_BASE_URL}/auth/profile`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

@@ -15,7 +15,7 @@ function BlogPostCard({ blogPost, onDelete }) {
       className="block bg-[#2C2F48] p-6 rounded-xl shadow-lg hover:bg-[#3B3F60] transition w-full max-w-5xl mx-auto mb-6 border border-gray-600"
     >
       <div className="flex flex-col w-full">
-        {/* ส่วนหัว: รูปผู้ใช้, ชื่อผู้ใช้, และวันที่ */}
+     
         <div className="flex items-center mb-4">
           {blogPost.user?.img ? (
             <img

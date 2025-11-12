@@ -12,6 +12,8 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     const fetchMovies = async () => {
       const cachedMovies = localStorage.getItem('cachedMovies');
@@ -24,7 +26,7 @@ function Home() {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get('http://192.168.1.165:3000/api/movies');
+        const response = await axios.get(`${API_BASE_URL}/movies`);
         setMovies(response.data);
         localStorage.setItem('cachedMovies', JSON.stringify(response.data));
       } catch (error) {

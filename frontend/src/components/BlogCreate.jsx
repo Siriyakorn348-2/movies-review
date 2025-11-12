@@ -18,12 +18,14 @@ function BlogCreate() {
   const MAX_IMAGES = 5;
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     console.log('Component mounted, clearing tags');
     setTags([]);
     const fetchTags = async () => {
       try {
-        const response = await axios.get('http://192.168.1.165:3000/api/tags', {
+        const response = await axios.get(`${API_BASE_URL}/tags`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -104,7 +106,7 @@ function BlogCreate() {
 
     try {
       const response = await axios.post(
-        'http://192.168.1.165:3000/api/tags',
+        `${API_BASE_URL}/tags`,
         { name: newTag.trim() },
         {
           headers: {
@@ -157,21 +159,11 @@ function BlogCreate() {
     }
     setIsSubmitting(true);
     try {
-      console.log('Submitting blog post with tags:', tags);
-      const postResponse = await axios.post(
-        'http://192.168.1.165:3000/api/blog-posts',
-        {
-          title: form.title,
-          content: form.content,
-          tags,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+     const postResponse = await axios.post(
+    `${API_BASE_URL}/blog-posts`,
+    { title: form.title, content: form.content, tags },
+     { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+    );
       console.log('Post created:', postResponse.data);
 
       if (images.length > 0) {
@@ -180,7 +172,7 @@ function BlogCreate() {
             const imageFormData = new FormData();
             imageFormData.append('image', image);
             await axios.post(
-              `http://192.168.1.165:3000/api/blog-posts/${postResponse.data.id}/images`,
+            `${API_BASE_URL}/blog-posts/${postResponse.data.id}/images`,
               imageFormData,
               {
                 headers: {

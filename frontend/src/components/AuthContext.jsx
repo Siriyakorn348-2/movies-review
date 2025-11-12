@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       axios
-        .get('http://192.168.1.165:3000/api/auth/me', {
+        .get(`${API_BASE_URL}/auth/me`, { 
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -28,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await axios.post('http://192.168.1.165:3000/api/auth/login', {
+    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
       email,
       password,
     });
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (email, password, username) => {
-    const response = await axios.post('http://192.168.1.165:3000/api/auth/register', {
+    const response = await axios.post(`${API_BASE_URL}/auth/register`, { 
       email,
       password,
       username,

@@ -14,6 +14,8 @@ function Search() {
   const itemsPerPage = 12; 
   const navigate = useNavigate();
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     if (query) {
       const fetchSearchResults = async () => {
@@ -21,7 +23,7 @@ function Search() {
         setError(null);
         try {
           const response = await axios.get(
-            `http://192.168.1.165:3000/api/movies/search?query=${encodeURIComponent(query)}`
+            `${API_BASE_URL}/movies/search?query=${encodeURIComponent(query)}`
           );
           setMovies(response.data);
           setCurrentPage(1);

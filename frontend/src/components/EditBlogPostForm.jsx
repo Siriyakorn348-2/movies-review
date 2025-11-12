@@ -17,6 +17,8 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
   const MAX_IMAGES = 5;
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     if (!blogPost) {
       setError('ไม่มีข้อมูลโพสต์');
@@ -50,7 +52,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     const fetchTags = async () => {
       try {
         console.log('Fetching all tags');
-        const response = await axios.get('http://192.168.1.165:3000/api/tags', {
+        const response = await axios.get(`${API_BASE_URL}/tags`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Fetched available tags:', response.data);
@@ -110,7 +112,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     e.preventDefault();
     if (!window.confirm('ยืนยันการลบรูปภาพ?')) return;
     try {
-      await axios.delete(`http://192.168.1.165:3000/api/blog-posts/${blogPost.id}/images/${imageId}`, {
+        await axios.delete(`${API_BASE_URL}/blog-posts/${blogPost.id}/images/${imageId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -150,9 +152,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
     }
 
     try {
-      const response = await axios.post(
-        'http://192.168.1.165:3000/api/tags',
-        { name: newTag.trim() },
+       const response = await axios.post(`${API_BASE_URL}/tags`, { name: newTag.trim() }, 
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -220,10 +220,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           try {
             const imageFormData = new FormData();
             imageFormData.append('image', image);
-            await axios.post(
-              `http://192.168.1.165:3000/api/blog-posts/${blogPost.id}/images`,
-              imageFormData,
-              {
+             await axios.post(`${API_BASE_URL}/blog-posts/${blogPost.id}/images`, imageFormData, {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem('token')}`,
                   'Content-Type': 'multipart/form-data',

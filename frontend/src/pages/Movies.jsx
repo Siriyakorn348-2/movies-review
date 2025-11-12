@@ -6,10 +6,11 @@ import MovieCard from '../components/MovieCard';
 function Movies() {
   const [movies, setMovies] = useState([]);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const response = await axios.get('http://192.168.1.165:3000/api/movies');
+        const response = await axios.get(`${API_BASE_URL}/movies`);
         setMovies(response.data);
       } catch (error) {
         console.error('Failed to fetch movies:', error);

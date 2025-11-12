@@ -18,12 +18,15 @@ function Slider() {
     return () => stopAutoScroll();
   }, []);
 
-  const getTrendingMovies = () => {
-    GlobalApi.getTrendingVideos.then(resp => {
-      console.log(resp.data.results);
-      setMovieList(resp.data.results);
-    });
-  };
+const getTrendingMovies = async () => {
+  try {
+    const resp = await GlobalApi.getTrendingVideos();
+    console.log(resp.data.results);
+    setMovieList(resp.data.results);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const sliderRight = (element) => {
     const maxScrollLeft = element.scrollWidth - element.clientWidth;

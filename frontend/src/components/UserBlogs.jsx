@@ -10,12 +10,14 @@ function UserBlogs() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     if (user) {
       const fetchUserPosts = async () => {
         try {
           setLoading(true);
-          const response = await axios.get('http://192.168.1.165:3000/api/blog-posts', {
+          const response = await axios.get(`${API_BASE_URL}/blog-posts`, {
             params: { userId: user.id },
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });

@@ -28,6 +28,8 @@ const createBlogPost = (formData) =>
   axios.post(`${backendBaseUrl}/blog-posts`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+const getMovieDetails = (id) =>
+  axios.get(`${movieBaseUrl}/movie/${id}?api_key=${api_key}&language=th-TH&append_to_response=videos,credits,similar,watch/providers,keywords`);
 
 export default {
   getTrendingVideos,
@@ -35,4 +37,5 @@ export default {
   getBlogPosts,
   getTags,
   createBlogPost,
+  getMovieDetails,
 };

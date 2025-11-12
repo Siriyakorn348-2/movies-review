@@ -6,6 +6,8 @@ function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(null);
@@ -21,11 +23,12 @@ function AuthForm() {
     }
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
       const payload = isLogin
         ? { email: formData.email, password: formData.password }
         : formData;
-      const response = await axios.post(`http://192.168.1.165:3000${endpoint}`, payload, {
+
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload, {
         headers: { 'Content-Type': 'application/json' },
       });
       localStorage.setItem('token', response.data.token);

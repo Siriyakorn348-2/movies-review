@@ -3,6 +3,8 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,7 @@ export function AuthProvider({ children }) {
     console.log('Token on refresh:', token);
     if (token) {
       try {
-        const response = await axios.get('http://192.168.1.165:3000/api/auth/me', {
+        const response = await axios.get(`${API_BASE_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Refreshed user:', response.data.user);
@@ -36,7 +38,7 @@ export function AuthProvider({ children }) {
       console.log('Token on load:', token);
       if (token) {
         try {
-          const response = await axios.get('http://192.168.1.165:3000/api/auth/me', {
+          const response = await axios.get(`${API_BASE_URL}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           console.log('Fetched user:', response.data.user);
@@ -58,7 +60,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://192.168.1.165:3000/api/auth/login', { email, password });
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       return response.data;

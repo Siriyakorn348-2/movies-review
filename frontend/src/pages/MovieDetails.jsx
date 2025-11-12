@@ -4,6 +4,9 @@ import axios from 'axios';
 import GlobalApi from '../Services/GlobalApi';
 import { useAuth } from '../context/AuthContext';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
+import actorimg from '../assets/Images/actorimg.jpg';
+import movieimg from '../assets/Images/movieimg.png';
+
 
 function MovieDetails() {
   const { id } = useParams();
@@ -18,6 +21,7 @@ function MovieDetails() {
   const [submitError, setSubmitError] = useState(null);
   const [hoverRating, setHoverRating] = useState(0);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   useEffect(() => {
     const fetchMovieDetails = async () => {
       setLoading(true);
@@ -32,14 +36,14 @@ function MovieDetails() {
 
         let movieInDb;
         try {
-          const backendResponse = await axios.get(`http://192.168.1.165:3000/api/movies/${id}`);
+          const backendResponse = await axios.get(`${API_BASE_URL}/movies/${id}`);
           movieInDb = backendResponse.data;
           setBackendMovieId(movieInDb.movieId);
         } catch (backendError) {
           console.warn('Movie not found in backend:', backendError.response?.data || backendError.message);
          
           try {
-            const response = await axios.post('http://192.168.1.165:3000/api/movies/sync', {
+            const response = await axios.post(`${API_BASE_URL}/movies/sync`, {
               apiId: id,
               title: tmdbResponse.data.title,
               posterUrl: tmdbResponse.data.poster_path
@@ -61,7 +65,7 @@ function MovieDetails() {
         if (movieInDb && movieInDb.movieId) {
           try {
             const reviewsResponse = await axios.get(
-              `http://192.168.1.165:3000/api/reviews?movieId=${movieInDb.movieId}`
+              `${API_BASE_URL}/reviews?movieId=${movieInDb.movieId}`
             );
             setReviews(reviewsResponse.data);
           } catch (reviewError) {
@@ -77,7 +81,7 @@ function MovieDetails() {
         if (user) {
           const token = localStorage.getItem('token');
           if (!token) throw new Error('No token found');
-          const favoritesResponse = await axios.get('http://192.168.1.165:3000/api/favorites', {
+          const favoritesResponse = await axios.get(`${API_BASE_URL}/favorites`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setIsFavorite(favoritesResponse.data.some((fav) => fav.movie.apiId === id));
@@ -108,13 +112,13 @@ function MovieDetails() {
     }
     try {
       if (isFavorite) {
-        await axios.delete(`http://192.168.1.165:3000/api/favorites/${id}`, {
+        await axios.delete(`${API_BASE_URL}/favorites/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setIsFavorite(false);
       } else {
         await axios.post(
-          'http://192.168.1.165:3000/api/favorites',
+          `${API_BASE_URL}/favorites`,
           { apiId: id },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -153,7 +157,7 @@ function MovieDetails() {
       setSubmitError(null);
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://192.168.1.165:3000/api/reviews',
+        `${API_BASE_URL}/reviews`,
         {
           movieId: backendMovieId,
           rating: ratingValue,
@@ -163,7 +167,7 @@ function MovieDetails() {
       );
       setReviewForm({ rating: '', comment: '' });
       const reviewsResponse = await axios.get(
-        `http://192.168.1.165:3000/api/reviews?movieId=${backendMovieId}`
+        `${API_BASE_URL}/reviews?movieId=${backendMovieId}`
       );
       setReviews(reviewsResponse.data);
     } catch (error) {
@@ -176,7 +180,7 @@ function MovieDetails() {
     if (!user) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://192.168.1.165:3000/api/reviews/${reviewId}`, {
+      await axios.delete(`${API_BASE_URL}/reviews/${reviewId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReviews(reviews.filter((review) => review.id !== reviewId));
@@ -275,16 +279,14 @@ function MovieDetails() {
           <h2 className="text-2xl font-bold mb-4">นักแสดง</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
             {cast.map((actor) => (
-              <div key={actor.id} className="text-center min-w-[150px]">
-                <img
-                  src={
-                    actor.profile_path
-                      ? IMAGE_BASE_URL + actor.profile_path
-                      : '/placeholder.jpg'
-                  }
-                  alt={actor.name}
-                  className="w-[120px] h-[120px] rounded-full mx-auto"
-                />
+              <div key={actor.id} className="text-center min-w-[150px] flex-shrink-0">
+                <div className="w-[120px] h-[120px] mx-auto rounded-full overflow-hidden bg-gray-700">
+                 <img
+                    src={actor.profile_path ? IMAGE_BASE_URL + actor.profile_path : actorimg}
+                    alt={actor.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <p className="mt-2 font-semibold">{actor.name}</p>
                 <p className="text-gray-400">{actor.character}</p>
               </div>
@@ -292,6 +294,7 @@ function MovieDetails() {
           </div>
         </div>
       )}
+
 
       {(director || producer) && (
         <div className="mb-8">
@@ -439,23 +442,25 @@ function MovieDetails() {
         </div>
       )}
 
-      {similarMovies.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">ภาพยนตร์ที่คล้ายกัน</h2>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
-            {similarMovies.map((movie) => (
-              <Link to={`/movies/${movie.id}`} key={movie.id} className="min-w-[150px]">
+     {similarMovies.length > 0 && (
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">ภาพยนตร์ที่คล้ายกัน</h2>
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
+          {similarMovies.map((movie) => (
+            <Link to={`/movies/${movie.id}`} key={movie.id} className="min-w-[150px] flex-shrink-0">
+              <div className="w-[150px] h-[225px] rounded-lg overflow-hidden bg-gray-700">
                 <img
-                  src={IMAGE_BASE_URL + movie.poster_path}
+                  src={movie.poster_path ? IMAGE_BASE_URL + movie.poster_path : movieimg} 
                   alt={movie.title}
-                  className="w-[150px] rounded-lg hover:border-[3px] border-gray-400"
+                  className="w-full h-full object-cover"
                 />
-                <p className="mt-2 text-center">{movie.title}</p>
-              </Link>
-            ))}
-          </div>
+              </div>
+              <p className="mt-2 text-center">{movie.title}</p>
+            </Link>
+          ))}
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 }

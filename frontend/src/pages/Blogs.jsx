@@ -14,17 +14,19 @@ function Blogs() {
   const POSTS_PER_PAGE = 10;
   const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
   useEffect(() => {
   const fetchBlogPosts = async () => {
     try {
       const params = new URLSearchParams(location.search);
       const tagId = params.get('tag');
-      let url = 'http://192.168.1.165:3000/api/blog-posts';
+      let url = `${API_BASE_URL}/blog-posts`;
       if (tagId) {
-        url = `http://192.168.1.165:3000/api/blog-posts/tag/${tagId}`;
+        url = `${API_BASE_URL}/blog-posts/tag/${tagId}`;
       }
       const response = await axios.get(url);
-      // เรียงลำดับโพสต์จากใหม่ไปเก่า
+     
       const sortedPosts = response.data.sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -39,7 +41,7 @@ function Blogs() {
 
   const fetchTags = async () => {
     try {
-      const response = await axios.get('http://192.168.1.165:3000/api/tags');
+      const response = await axios.get(`${API_BASE_URL}/tags`);
       setAvailableTags(response.data);
     } catch (error) {
       console.error('Failed to fetch tags:', error);
@@ -54,7 +56,7 @@ function Blogs() {
   const handleDelete = async (id) => {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?')) return;
     try {
-      await axios.delete(`http://192.168.1.165:3000/api/blog-posts/${id}`, {
+      await axios.delete(`${API_BASE_URL}/blog-posts/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setBlogPosts((prev) => prev.filter((post) => post.id !== id));

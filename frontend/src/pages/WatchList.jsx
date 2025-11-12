@@ -12,12 +12,13 @@ function WatchList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12; 
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   useEffect(() => {
     if (user) {
       const fetchFavorites = async () => {
         try {
           setLoading(true);
-          const response = await axios.get('http://192.168.1.165:3000/api/favorites', {
+          const response = await axios.get(`${API_BASE_URL}/favorites`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });
           setFavorites(response.data);
@@ -37,7 +38,7 @@ function WatchList() {
 
   const handleRemove = async (movieId) => {
     try {
-      await axios.delete(`http://192.168.1.165:3000/api/favorites/${movieId}`, {
+      await axios.delete(`${API_BASE_URL}/favorites/${movieId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setFavorites((prev) => prev.filter((f) => f.movie.apiId !== movieId));
