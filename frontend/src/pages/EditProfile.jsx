@@ -23,7 +23,7 @@ function EditProfile() {
         email: user.email || '',
         username: user.username || '',
       });
-      setPreview(user.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png');
+      setPreview(user.img || '');
     }
   }, [user]);
 
@@ -116,13 +116,24 @@ function EditProfile() {
       <h2 className="text-2xl font-semibold text-white mb-6 text-center">แก้ไขโปรไฟล์</h2>
       {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
       <form onSubmit={handleSubmit}>
-        <div className="mb-4 flex justify-center">
+       <div className="mb-4 flex justify-center">
+        {preview && preview !== '' && preview !== 'null' && preview !== 'undefined' ? (
           <img
             src={preview}
             alt="Profile preview"
-            className="w-24 h-24 rounded-full object-cover"
+            className="w-24 h-24 rounded-full object-cover border-2 border-gray-700"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = ''; 
+            }}
           />
-        </div>
+        ) : (
+          <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-3xl">
+            {formData.username ? formData.username.charAt(0).toUpperCase() : 'U'}
+          </div>
+        )}
+      </div>
+
         <div className="mb-4">
           <label className="block text-gray-400 mb-2">รูปโปรไฟล์</label>
           <input
@@ -160,6 +171,7 @@ function EditProfile() {
           <button
             type="button"
             onClick={() => navigate('/profile')}
+            style={{background:"#2A2A2A"}}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition"
           >
             ยกเลิก
@@ -167,6 +179,7 @@ function EditProfile() {
           <button
             type="submit"
             disabled={loading}
+            style={{background:"#2A2A2A"}}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400"
           >
             {loading ? 'กำลังบันทึก...' : 'บันทึก'}

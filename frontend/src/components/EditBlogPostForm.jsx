@@ -286,7 +286,10 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           ></textarea>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">แท็ก (เลือกแล้ว: {tags.length})</label>
+        <label
+          className="block mb-1 text-white"  >
+          แท็ก (เลือกแล้ว: {tags.length})
+        </label>
           <div className="relative">
             <div className="flex flex-wrap gap-2 mb-2">
               {tags.map((tagId) => {
@@ -319,6 +322,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
               <button
                 type="button"
                 onClick={handleNewTagSubmit}
+                style={{background:"#2A2A2A"}}
                 className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
               >
                 เพิ่มแท็ก
@@ -353,6 +357,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
                   <button
                     type="button"
                     onClick={(e) => handleDeleteImage(e, image.id)}
+                    style={{background:"#2A2A2A"}}
                     className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
                   >
                     X
@@ -385,6 +390,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(index)}
+                    style={{background:"#2A2A2A"}}
                     className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
                   >
                     X
@@ -398,6 +404,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           <button
             type="submit"
             disabled={isSubmitting}
+            style={{background:"#2A2A2A"}}
             className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 disabled:bg-gray-600"
           >
             {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -405,6 +412,7 @@ function EditBlogPostForm({ blogPost, onSubmit, onCancel }) {
           <button
             type="button"
             onClick={onCancel}
+            style={{background:"#2A2A2A"}}
             className="bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700"
           >
             ยกเลิก

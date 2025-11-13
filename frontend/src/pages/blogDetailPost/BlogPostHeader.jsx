@@ -58,6 +58,7 @@ function BlogPostHeader({
             <div className="relative">
               <button
                 onClick={onToggleMenu}
+                style={{background:'#2A2A2A'}}
                 className="text-white bg-gray-800 hover:bg-blue-900 hover:text-blue-400 p-2 rounded-full focus:outline-none transition"
                 aria-label="เมนูตัวเลือก"
               >
@@ -74,13 +75,15 @@ function BlogPostHeader({
                 <div className="absolute right-0 mt-2 w-40 bg-black rounded-lg shadow-lg z-10 border border-blue-600">
                   <button
                     onClick={onEditToggle}
+                    style={{background:'#2A2A2A'}}
                     className="block w-full text-left px-4 py-2 text-white hover:bg-gray-800 hover:text-blue-400"
                   >
                     แก้ไขโพสต์
                   </button>
                   <button
                     onClick={onDelete}
-                    className="block w-full text-left px-4 py-2 text-white hover:bg-gray-800 hover:text-blue-400"
+                    style={{background:'#2A2A2A'}}
+                    className="block w-full text-left px-4 py-2 text-white hover:bg-gray-800 hover:text-red-400"
                   >
                     ลบโพสต์
                   </button>

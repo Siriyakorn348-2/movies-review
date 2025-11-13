@@ -390,6 +390,7 @@ function MovieDetails() {
             </div>
             <button
               type="submit"
+              style={{backgroundColor :'#141414'}}
               className="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700"
               disabled={!backendMovieId}
             >

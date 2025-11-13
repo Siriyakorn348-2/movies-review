@@ -31,6 +31,44 @@ const createBlogPost = (formData) =>
 const getMovieDetails = (id) =>
   axios.get(`${movieBaseUrl}/movie/${id}?api_key=${api_key}&language=th-TH&append_to_response=videos,credits,similar,watch/providers,keywords`);
 
+// ดึงภาพยนตร์ทั้งหมดจากทุกค่าย (เรียงตามความนิยม)
+const getDisneyMovies = async () => {
+  try {
+    const response = await axios.get(
+      `${movieBaseUrl}/discover/movie?api_key=${api_key}&language=th-TH&sort_by=popularity.desc`
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching all movies:", error.message);
+    throw error;
+  }
+};
+const getMovieByKeyword = async (keyword) => {
+  try {
+    const response = await axios.get(
+      `${movieBaseUrl}/search/movie?api_key=${api_key}&language=th-TH&query=${encodeURIComponent(
+        keyword
+      )}`
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching movies by keyword:", error.message);
+    throw error;
+  }
+};
+
+const getMovieByCompany = async (companyId) => {
+  try {
+    const response = await axios.get(
+      `${movieBaseUrl}/discover/movie?api_key=${api_key}&with_companies=${companyId}&language=th-TH&sort_by=popularity.desc`
+    );
+    return response;
+  } catch (error) {
+    console.error(`Error fetching movies by company ${companyId}:`, error.message);
+    throw error;
+  }
+};
+
 export default {
   getTrendingVideos,
   getMovieByGenreId,
@@ -38,4 +76,7 @@ export default {
   getTags,
   createBlogPost,
   getMovieDetails,
+  getDisneyMovies,
+  getMovieByKeyword,
+  getMovieByCompany,
 };

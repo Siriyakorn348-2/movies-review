@@ -81,86 +81,46 @@ function Header() {
   }
 
   return (
-    <div className="flex items-center justify-between p-4 bg-[#1A1C29] shadow-md relative z-20">
+    <div className="flex items-center justify-between px-2 py-3 md:p-4 bg-[#1A1C29] shadow-md relative z-20">
       <Link to="/">
         <img
           src={logo}
-          className="w-[80px] md:w-[100px] object-contain transition-transform duration-300 hover:scale-105"
+          className="w-[60px] md:w-[100px] object-contain transition-transform duration-300 hover:scale-105"
           alt="Movie Review Logo"
         />
       </Link>
 
+      {/* Desktop Menu */}
       <div className="hidden md:flex gap-4">
         {menu.map((item) => (
           <Link to={item.path} key={item.name}>
             <button
-              style={{ backgroundColor: 'black', color: 'white' }}
-              className="flex items-center space-x-2 px-5 py-2 rounded-full font-medium text-sm tracking-wide cursor-pointer shadow-md !important"
+              onClick={() => navigate(item.path)}
+              className="flex items-center space-x-2 px-5 py-2 rounded-full transition duration-300 font-medium text-sm tracking-wide cursor-pointer bg-black text-white shadow-md"
             >
-              <item.icon className="text-lg" style={{ color: 'white' }} />
+              <item.icon className="text-lg" />
               <span>{item.name}</span>
             </button>
           </Link>
         ))}
       </div>
 
-
-
-      {/* Mobile Menu */}
-    <div className="flex md:hidden gap-5 items-center">
-      {menu.slice(0, 2).map((item) => (
-        <Link to={item.path} key={item.name}>
-          <button className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-full shadow-md">
-            <item.icon className="text-2xl" />
-          </button>
-        </Link>
-      ))}
-      
-      <div className="relative">
-        <button
-          onClick={() => setToggle(!toggle)}
-          className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-full shadow-md"
-        >
-          <HiDotsVertical className="text-2xl" />
-        </button>
-
-        {toggle && (
-          <div className="absolute right-0 mt-3 bg-black border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg">
-            {menu.slice(2).map((item) => (
-              <Link
-                to={item.path}
-                key={item.name}
-                onClick={() => setToggle(false)}
-              >
-                <div className="flex items-center gap-2 text-white hover:text-gray-300 py-2">
-                  <item.icon className="text-lg" />
-                  <span>{item.name}</span>
-                </div>
-              </Link>
-            ))}
-
-            {user && (
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setToggle(false);
-                }}
-                className="flex items-center gap-2 text-white hover:text-gray-300 py-2 w-full text-left"
-              >
-                <HiArrowRightOnRectangle className="text-lg" />
-                <span>ออกจากระบบ</span>
-              </button>
-            )}
-          </div>
-        )}
+      {/* Mobile  */}
+      <div className="flex md:hidden gap-3 items-center">
+        {menu.map((item) => (
+          <Link to={item.path} key={item.name}>
+            <button className="text-gray-300 hover:text-white transition-colors p-1">
+              <item.icon className="text-xl" />
+            </button>
+          </Link>
+        ))}
       </div>
-    </div>
 
+      {/* Desktop */}
       <div className="hidden md:flex items-center space-x-4 relative">
         <div className="relative" ref={searchRef}>
           <button
             onClick={toggleSearch}
-            style={{ backgroundColor: 'black', color: 'white' }}
             className="text-gray-300 hover:text-white focus:outline-none"
           >
             <HiMagnifyingGlass className="text-2xl" />
@@ -186,39 +146,28 @@ function Header() {
         </div>
 
         {user ? (
-          <div className="flex items-center space-x-2">
+          <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              style={{ backgroundColor: 'black', color: 'white' }}
-              className="flex items-center space-x-2 focus:outline-none"
+              className="flex items-center space-x-2 px-5 py-2 rounded-full focus:outline-none hover:opacity-80 transition-opacity"
             >
-              <img
-                src={user.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png'}
-                alt={user.username || user.name}
-                className="w-10 h-10 rounded-full object-cover border-2 "
-                onError={(e) => {
-                  e.target.src = 'https://cdn-icons-png.flaticon.com/512/164/164600.png';
-                }}
-              />
+              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
+                {user.username?.charAt(0).toUpperCase() || '?'}
+              </div>
               <span className="text-sm font-medium text-white">{user.username || user.name}</span>
-              <FaChevronDown className="text-red-600" />
+              <FaChevronDown style={{ color: '#DC2626' }} />
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-[#2A2A2A] rounded-lg shadow-lg py-2 z-10">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-[#2A2A2A] rounded-lg shadow-lg py-2 z-[1000]">
                 <Link
                   to="/profile"
                   onClick={() => setShowDropdown(false)}
-                  className="flex items-center px-4 py-2 border-b border-gray-600 hover:bg-gray-600"
+                  className="flex items-center px-4 py-2 border-b border-gray-600 hover:bg-gray-600 transition-colors"
                 >
-                  <img
-                    src={user.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png'}
-                    alt={user.username || user.name}
-                    className="w-8 h-8 rounded-full object-cover mr-2"
-                    onError={(e) => {
-                      e.target.src = 'https://cdn-icons-png.flaticon.com/512/164/164600.png';
-                    }}
-                  />
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl mr-3">
+                    {user.username?.charAt(0).toUpperCase() || '?'}
+                  </div>
                   <span className="text-sm font-medium text-white">{user.username || user.name}</span>
                 </Link>
                 <div className="mt-2">
@@ -227,9 +176,9 @@ function Header() {
                       navigate('/edit-profile');
                       setShowDropdown(false);
                     }}
-                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
+                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors"
                   >
-                    <HiOutlineUserCircle className="text-lg text-white" />
+                    <HiOutlineUserCircle className="text-lg" color="#ffffff" />
                     แก้ไขโปรไฟล์
                   </button>
                   
@@ -238,9 +187,9 @@ function Header() {
                       handleLogout();
                       setShowDropdown(false);
                     }}
-                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
+                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors"
                   >
-                    <HiArrowRightOnRectangle className="text-lg text-white" />
+                    <HiArrowRightOnRectangle className="text-lg" color="#ffffff" />
                     ออกจากระบบ
                   </button>
                 </div>
@@ -250,89 +199,68 @@ function Header() {
         ) : (
           <button
             onClick={() => navigate('/login')}
-            style={{ backgroundColor: 'black', color: 'white' }}
             className="px-5 py-2 text-white bg-red-600 rounded-full hover:bg-red-700 transition duration-300 font-medium text-sm tracking-wide hover:shadow-md cursor-pointer"
           >
             เข้าสู่ระบบ
           </button>
         )}
       </div>
-
-      <div className="md:hidden flex items-center space-x-4">
+        
+      {/* Mobile  */}
+      <div className="md:hidden flex items-center">
         {user ? (
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center space-x-2 focus:outline-none"
-          >
-            <img
-              src={user.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png'}
-              alt={user.username || user.name}
-              className="w-8 h-8 rounded-full object-cover border-2 border-red-600"
-              onError={(e) => {
-                e.target.src = 'https://cdn-icons-png.flaticon.com/512/164/164600.png';
-              }}
-            />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="focus:outline-none"
+            >
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                {user.username?.charAt(0).toUpperCase() || '?'}
+              </div>
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 top-full mt-3 bg-[#141414] border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg min-w-[200px]">
+                <Link
+                  to="/profile"
+                  onClick={() => setShowDropdown(false)}
+                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
+                >
+                  <HiOutlineUserCircle className="text-lg" />
+                  <span>โปรไฟล์</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    navigate('/edit-profile');
+                    setShowDropdown(false);
+                  }}
+                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2 w-full text-left"
+                >
+                  <HiOutlineUserCircle className="text-lg" />
+                  <span>แก้ไขโปรไฟล์</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setShowDropdown(false);
+                  }}
+                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2 w-full text-left"
+                >
+                  <HiArrowRightOnRectangle className="text-lg" />
+                  <span>ออกจากระบบ</span>
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <button
             onClick={() => navigate('/login')}
-            className="text-gray-300"
+            className="text-gray-300 hover:text-white transition-colors"
           >
             <HiOutlineUserCircle className="text-2xl" />
           </button>
         )}
-      {showDropdown && (
-  <div className="absolute right-4 top-16 mt-3 bg-[#141414] border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg">
-    {user && (
-      <>
-        <Link
-          to="/profile"
-          onClick={() => setShowDropdown(false)}
-          className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
-        >
-          <HiOutlineUserCircle className="text-lg" />
-          <span>โปรไฟล์</span>
-        </Link>
-<button
-  onClick={() => {
-    navigate('/edit-profile');
-    setShowDropdown(false);
-  }}
-  style={{
-    background: 'none',
-    border: 'none',
-    boxShadow: 'none',
-    color: '#D1D5DB',
-    cursor: 'pointer',
-  }}
-  className="flex items-center gap-2 w-full text-left hover:text-white py-2"
->
-  <HiOutlineUserCircle className="text-lg" />
-  <span>แก้ไขโปรไฟล์</span>
-</button>
-
-<button
-  onClick={() => {
-    handleLogout();
-    setShowDropdown(false);
-  }}
-  style={{
-    background: 'none',
-    border: 'none',
-    boxShadow: 'none',
-    color: '#D1D5DB',
-    cursor: 'pointer',
-  }}
-  className="flex items-center gap-2 w-full text-left hover:text-white py-2"
->
-  <HiArrowRightOnRectangle className="text-lg" />
-  <span>ออกจากระบบ</span>
-</button>
-      </>
-    )}
-  </div>
-)}
-
       </div>
     </div>
   );

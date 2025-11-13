@@ -51,21 +51,16 @@ function Profile() {
     <div className="max-w-5xl mx-auto bg-black p-8 rounded-xl shadow-2xl mt-10 mb-10 font-['Helvetica Neue', 'Sarabun'] text-white">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 border-b border-blue-950 pb-6">
-        <img
-          src={`${user.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png'}?t=${Date.now()}`}
-          alt="User avatar"
-          className="w-24 h-24 rounded-full object-cover border-4 border-blue-900 shadow-md"
-          onError={(e) => {
-            console.error('Image load error for user.img:', user.img);
-            e.target.src = 'https://cdn-icons-png.flaticon.com/512/164/164600.png';
-          }}
-        />
+        <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
+          {user.username?.charAt(0).toUpperCase() || '?'}
+        </div>
         <div className="text-center sm:text-left">
           <h1 className="text-3xl font-bold text-white mb-2">{user.username}</h1>
           <p className="text-gray-400 text-lg">{user.email}</p>
         </div>
         <button
           onClick={handleEditProfile}
+          style={{background:'#2A2A2A' }}
           className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md sm:ml-auto"
         >
           แก้ไขโปรไฟล์

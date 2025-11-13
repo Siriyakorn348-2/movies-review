@@ -233,10 +233,10 @@ function BlogCreate() {
   return (
     <div className="max-w-5xl mx-auto bg-[#141414] p-10 rounded-lg shadow-lg">
       <form onSubmit={handleSubmit}>
-        <h2 className="text-2xl font-bold mb-4">สร้างบล็อกใหม่</h2>
+        <h2 className="text-2xl font-bold mb-4 text-white">สร้างบล็อกใหม่</h2>
         {error && <div className="text-red-400 mb-4">{error}</div>}
         <div className="mb-4">
-          <label className="block mb-1">หัวข้อ</label>
+          <label className="block mb-1 text-white">หัวข้อ</label>
           <input
             type="text"
             value={form.title}
@@ -246,7 +246,7 @@ function BlogCreate() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1">เนื้อหา</label>
+          <label className="block mb-1 text-white">เนื้อหา</label>
           <textarea
             value={form.content} 
             onChange={(e) => setForm({ ...form, content: e.target.value })}
@@ -256,7 +256,7 @@ function BlogCreate() {
           ></textarea>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">แท็ก (เลือกแล้ว: {tags.length})</label>
+          <label className="block mb-1 text-white">แท็ก (เลือกแล้ว: {tags.length})</label>
           <div className="relative">
             <div className="flex flex-wrap gap-2 mb-2">
               {tags.map((tagId) => {
@@ -289,7 +289,8 @@ function BlogCreate() {
               <button
                 type="button"
                 onClick={handleNewTagSubmit}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                style={{background:"#2A2A2A"}}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 "
               >
                 เพิ่มแท็ก
               </button>
@@ -310,7 +311,7 @@ function BlogCreate() {
           </div>
         </div>
         <div className="mb-4">
-          <label className="block mb-1">อัปโหลดรูปภาพ (สูงสุด {MAX_IMAGES} รูป)</label>
+          <label className="block mb-1 text-white">อัปโหลดรูปภาพ (สูงสุด {MAX_IMAGES} รูป)</label>
           <input
             type="file"
             multiple
@@ -344,6 +345,7 @@ function BlogCreate() {
           <button
             type="submit"
             disabled={isSubmitting}
+            style={{background:"#2A2A2A"}}
             className="bg-red-600 text-white p-2 rounded-md hover:bg-gray-300 disabled:bg-gray-50"
           >
             {isSubmitting ? 'Creating...' : 'Create Blog'}
@@ -351,7 +353,8 @@ function BlogCreate() {
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-gray-600 text-white p-2 rounded-md hover:bg-gray-50"
+            style={{background:"#2A2A2A"}}
+            className="bg-gray-600 text-white p-2 rounded-md hover:bg-red-600"
           >
             Cancel
           </button>

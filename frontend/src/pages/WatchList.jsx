@@ -109,6 +109,7 @@ function WatchList() {
           <p className="text-gray-400 text-lg mb-4">คุณยังไม่มีภาพยนตร์ในรายการโปรด</p>
           <button
             onClick={() => navigate('/search')}
+            style={{backgroundColor :'#141414'}}
             className="px- py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-300"
           >
             ค้นหาภาพยนตร์

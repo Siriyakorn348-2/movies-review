@@ -11,9 +11,9 @@ function CategoryMovies() {
 
   const categoryMapping = {
     disney: { type: 'company', id: 2 }, 
-    pixar: { type: 'keyword', id: 1299 }, 
-    marvel: { type: 'keyword', id: 180547 }, 
-    starwars: { type: 'keyword', id: 306 }, 
+    pixar: { type: 'company', id: 3 },   
+    marvel: { type: 'company', id: 420 }, 
+    starwars: { type: 'company', id: 1 }, 
     'national-geographic': { type: 'genre', id: 99 }, 
   };
 
@@ -28,13 +28,14 @@ function CategoryMovies() {
         }
 
         let response;
-        if (category.type === 'company') {
-          response = await GlobalApi.getDisneyMovies(); 
-        } else if (category.type === 'genre') {
-          response = await GlobalApi.getMovieByGenreId(category.id);
-        } else if (category.type === 'keyword') {
-          response = await GlobalApi.getMovieByKeyword(category.id);
-        }
+      if (category.type === 'company') {
+        response = await GlobalApi.getMovieByCompany(category.id);
+      } else if (category.type === 'genre') {
+        response = await GlobalApi.getMovieByGenreId(category.id);
+      } else if (category.type === 'keyword') {
+        response = await GlobalApi.getMovieByKeyword(category.id);
+      }
+
         setMovies(response.data.results);
       } catch (err) {
         setError('ไม่สามารถโหลดรายการภาพยนตร์ได้: ' + (err.response?.data?.status_message || err.message));
@@ -56,7 +57,7 @@ function CategoryMovies() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl mb-7 capitalize  ">
+      <h1 className="text-3xl mb-7 capitalize text-white ">
         ภาพยนตร์จาก {categoryId.replace('-', ' ')}
       </h1>
       {movies.length > 0 ? (

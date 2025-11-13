@@ -41,6 +41,7 @@ function BlogPostCommentSection({
               />
               <button
                 type="submit"
+                style={{background:"#2A2A2A"}}
                 className="bg-blue-600 text-white px-5 py-2 rounded-lg mt-3 hover:bg-blue-700 transition shadow-md"
               >
                 โพสต์
