@@ -94,15 +94,17 @@ function Header() {
         {menu.map((item) => (
           <Link to={item.path} key={item.name}>
             <button
-              onClick={() => navigate(item.path)}
-              className="flex items-center space-x-2 px-5 py-2 rounded-full transition duration-300 font-medium text-sm tracking-wide cursor-pointer bg-black text-white shadow-md"
+              style={{ backgroundColor: 'black', color: 'white' }}
+              className="flex items-center space-x-2 px-5 py-2 rounded-full font-medium text-sm tracking-wide cursor-pointer shadow-md !important"
             >
-              <item.icon className="text-lg" />
+              <item.icon className="text-lg" style={{ color: 'white' }} />
               <span>{item.name}</span>
             </button>
           </Link>
         ))}
       </div>
+
+
 
       {/* Mobile Menu */}
     <div className="flex md:hidden gap-5 items-center">
@@ -158,6 +160,7 @@ function Header() {
         <div className="relative" ref={searchRef}>
           <button
             onClick={toggleSearch}
+            style={{ backgroundColor: 'black', color: 'white' }}
             className="text-gray-300 hover:text-white focus:outline-none"
           >
             <HiMagnifyingGlass className="text-2xl" />
@@ -186,6 +189,7 @@ function Header() {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
+              style={{ backgroundColor: 'black', color: 'white' }}
               className="flex items-center space-x-2 focus:outline-none"
             >
               <img
@@ -246,6 +250,7 @@ function Header() {
         ) : (
           <button
             onClick={() => navigate('/login')}
+            style={{ backgroundColor: 'black', color: 'white' }}
             className="px-5 py-2 text-white bg-red-600 rounded-full hover:bg-red-700 transition duration-300 font-medium text-sm tracking-wide hover:shadow-md cursor-pointer"
           >
             เข้าสู่ระบบ
@@ -276,43 +281,58 @@ function Header() {
             <HiOutlineUserCircle className="text-2xl" />
           </button>
         )}
-        {showDropdown && (
-          <div className="absolute right-4 top-16 mt-3 bg-[#141414] border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg">
-            {user && (
-              <>
-                <Link
-                  to="/profile"
-                  onClick={() => setShowDropdown(false)}
-                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
-                >
-                  <HiOutlineUserCircle className="text-lg" />
-                  <span>โปรไฟล์</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    navigate('/edit-profile');
-                    setShowDropdown(false);
-                  }}
-                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
-                >
-                  <HiOutlineUserCircle className="text-lg" />
-                  <span>แก้ไขโปรไฟล์</span>
-                </button>
-                
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setShowDropdown(false);
-                  }}
-                  className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
-                >
-                  <HiArrowRightOnRectangle className="text-lg" />
-                  <span>ออกจากระบบ</span>
-                </button>
-              </>
-            )}
-          </div>
-        )}
+      {showDropdown && (
+  <div className="absolute right-4 top-16 mt-3 bg-[#141414] border border-gray-700 p-3 px-5 py-4 z-[1000] rounded-lg shadow-lg">
+    {user && (
+      <>
+        <Link
+          to="/profile"
+          onClick={() => setShowDropdown(false)}
+          className="flex items-center gap-2 text-gray-300 hover:text-white py-2"
+        >
+          <HiOutlineUserCircle className="text-lg" />
+          <span>โปรไฟล์</span>
+        </Link>
+<button
+  onClick={() => {
+    navigate('/edit-profile');
+    setShowDropdown(false);
+  }}
+  style={{
+    background: 'none',
+    border: 'none',
+    boxShadow: 'none',
+    color: '#D1D5DB',
+    cursor: 'pointer',
+  }}
+  className="flex items-center gap-2 w-full text-left hover:text-white py-2"
+>
+  <HiOutlineUserCircle className="text-lg" />
+  <span>แก้ไขโปรไฟล์</span>
+</button>
+
+<button
+  onClick={() => {
+    handleLogout();
+    setShowDropdown(false);
+  }}
+  style={{
+    background: 'none',
+    border: 'none',
+    boxShadow: 'none',
+    color: '#D1D5DB',
+    cursor: 'pointer',
+  }}
+  className="flex items-center gap-2 w-full text-left hover:text-white py-2"
+>
+  <HiArrowRightOnRectangle className="text-lg" />
+  <span>ออกจากระบบ</span>
+</button>
+      </>
+    )}
+  </div>
+)}
+
       </div>
     </div>
   );

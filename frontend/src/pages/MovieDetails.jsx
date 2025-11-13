@@ -249,6 +249,7 @@ function MovieDetails() {
               )}
               <button
                 onClick={toggleFavorite}
+                style={{ backgroundColor: 'black', color: 'white' }}
                 className={`inline-block px-4 py-2 rounded-md ${
                   isFavorite ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
                 }`}

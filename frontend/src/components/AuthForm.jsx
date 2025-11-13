@@ -85,6 +85,7 @@ function AuthForm() {
         </div>
         <button
           type="submit"
+          style={{ backgroundColor: 'black', color: 'white' }}
           className="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700"
         >
           {isLogin ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}
