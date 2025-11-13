@@ -31,7 +31,7 @@ const createBlogPost = (formData) =>
 const getMovieDetails = (id) =>
   axios.get(`${movieBaseUrl}/movie/${id}?api_key=${api_key}&language=th-TH&append_to_response=videos,credits,similar,watch/providers,keywords`);
 
-// ดึงภาพยนตร์ทั้งหมดจากทุกค่าย (เรียงตามความนิยม)
+
 const getDisneyMovies = async () => {
   try {
     const response = await axios.get(
