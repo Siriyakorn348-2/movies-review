@@ -15,6 +15,15 @@ const errorHandler = require('./src/middleware/errorHandler');
 const tagRouter = require('./src/routes/tag');
 const cloudinary = require('cloudinary').v2;
 
+const fs = require('fs');
+const path = require('path');
+
+const tempDir = path.join(__dirname, 'temp'); 
+
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+  console.log('Created temp directory:', tempDir);
+}
 
 const app = express();
 

@@ -50,12 +50,9 @@ function BlogPostComment({ comment, onDelete }) {
       {error && <div className="text-red-500 mb-2 text-sm">{error}</div>}
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
-          <img
-            src={`${comment.user?.img || 'https://cdn-icons-png.flaticon.com/512/164/164600.png'}?t=${new Date().getTime()}`}
-            alt="User avatar"
-            className="w-8 h-8 rounded-full"
-            onError={(e) => (e.target.src = 'https://cdn-icons-png.flaticon.com/512/164/164600.png')} 
-          />
+        <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
+          {comment.user?.username?.charAt(0).toUpperCase() || '?'}
+        </div>
           <div>
             <p className="text-gray-400">
               <strong>{comment.user?.username || 'ไม่ระบุผู้ใช้'}</strong>: {comment.content}
