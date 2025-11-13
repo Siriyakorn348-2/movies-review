@@ -29,7 +29,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: '*',
+    origin: 'https://movies-review-git-main-siriyakorn348-2s-projects.vercel.app', 
     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
     allowedHeaders: ['Content-Type', 'Authorization'], 
     credentials: true, 
