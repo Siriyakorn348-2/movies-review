@@ -2,7 +2,7 @@
 
 Movie Review Project is a web application for movie reviews and user profile management. Users can browse movies, write reviews, create blogs, and save favorite posts.
 
-[Visit the App](https://movies-review-git-main-siriyakorn348-2s-projects.vercel.app/)
+[Visit the App](https://movies-review-gamma.vercel.app/)
 
 ---
 
