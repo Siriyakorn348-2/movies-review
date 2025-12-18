@@ -26,7 +26,7 @@ exports.addFavorite = async (req, res, next) => {
 exports.removeFavorite = async (req, res, next) => {
   try {
     const { apiId } = req.params;
-    console.log('Remove favorite request:', { userId: req.user.id, apiId }); // Debug
+    console.log('Remove favorite request:', { userId: req.user.id, apiId }); 
     if (!apiId) return res.status(400).json({ error: 'กรุณาระบุ apiId' });
     const result = await favoriteService.removeFavorite(req.user.id, apiId);
     res.json(result);

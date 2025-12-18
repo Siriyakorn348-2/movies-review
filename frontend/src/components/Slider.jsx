@@ -1,57 +1,62 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom'; 
+import { Link } from 'react-router-dom';
 import GlobalApi from '../Services/GlobalApi';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
 
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
-const ITEM_WIDTH = 1650; 
-const MARGIN_RIGHT = 32; 
+const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
 
 function Slider() {
   const [movieList, setMovieList] = useState([]);
-  const elementRef = useRef();
+  const elementRef = useRef(null);
   const autoScrollRef = useRef(null);
+  const itemWidthRef = useRef(0);
 
   useEffect(() => {
     getTrendingMovies();
+    calculateItemWidth();
     startAutoScroll();
-    return () => stopAutoScroll();
+
+    window.addEventListener('resize', calculateItemWidth);
+    return () => {
+      stopAutoScroll();
+      window.removeEventListener('resize', calculateItemWidth);
+    };
   }, []);
 
-const getTrendingMovies = async () => {
-  try {
-    const resp = await GlobalApi.getTrendingVideos();
-    console.log(resp.data.results);
-    setMovieList(resp.data.results);
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-  const sliderRight = (element) => {
-    const maxScrollLeft = element.scrollWidth - element.clientWidth;
-    if (element.scrollLeft >= maxScrollLeft - 10) {
-      element.scrollLeft = 0;
-    } else {
-      element.scrollLeft += ITEM_WIDTH + MARGIN_RIGHT;
+  const getTrendingMovies = async () => {
+    try {
+      const resp = await GlobalApi.getTrendingVideos();
+      setMovieList(resp.data.results || []);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const sliderLeft = (element) => {
-    if (element.scrollLeft <= 0) {
-      element.scrollLeft = element.scrollWidth - element.clientWidth;
-    } else {
-      element.scrollLeft -= ITEM_WIDTH + MARGIN_RIGHT;
-    }
+  const calculateItemWidth = () => {
+    const w = window.innerWidth;
+    if (w < 640) itemWidthRef.current = w - 32; 
+    else if (w < 1024) itemWidthRef.current = w - 64; 
+    else itemWidthRef.current = w - 128; 
+  };
+
+  const sliderRight = () => {
+    const el = elementRef.current;
+    if (!el) return;
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+    if (el.scrollLeft >= maxScrollLeft - 10) el.scrollLeft = 0;
+    else el.scrollLeft += itemWidthRef.current;
+  };
+
+  const sliderLeft = () => {
+    const el = elementRef.current;
+    if (!el) return;
+    if (el.scrollLeft <= 0) el.scrollLeft = el.scrollWidth - el.clientWidth;
+    else el.scrollLeft -= itemWidthRef.current;
   };
 
   const startAutoScroll = () => {
     if (!autoScrollRef.current) {
-      autoScrollRef.current = setInterval(() => {
-        if (elementRef.current) {
-          sliderRight(elementRef.current);
-        }
-      }, 3000);
+      autoScrollRef.current = setInterval(sliderRight, 3500);
     }
   };
 
@@ -62,40 +67,42 @@ const getTrendingMovies = async () => {
     }
   };
 
-  const handleMouseEnter = () => {
-    stopAutoScroll();
-  };
-
-  const handleMouseLeave = () => {
-    startAutoScroll();
-  };
-
   return (
-    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div
+      className="relative"
+      onMouseEnter={stopAutoScroll}
+      onMouseLeave={startAutoScroll}
+    >
+
       <HiChevronLeft
-        className="hidden md:block text-white text-[40px] absolute left-8 top-[300px] cursor-pointer z-10"
-        onClick={() => sliderLeft(elementRef.current)}
+        className="hidden md:block text-white text-4xl absolute left-4 md:left-8 top-1/2 -translate-y-1/2 cursor-pointer z-10"
+        onClick={sliderLeft}
       />
       <HiChevronRight
-        className="hidden md:block text-white text-[40px] absolute right-8 top-[300px] cursor-pointer z-10"
-        onClick={() => sliderRight(elementRef.current)}
+        className="hidden md:block text-white text-4xl absolute right-4 md:right-8 top-1/2 -translate-y-1/2 cursor-pointer z-10"
+        onClick={sliderRight}
       />
 
+ 
       <div
-        className="flex overflow-x-auto w-full px-16 py-4 scroll-smooth snap-x snap-mandatory"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
         ref={elementRef}
+        className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory px-2 sm:px-4 md:px-8"
+        style={{ scrollbarWidth: 'none' }}
       >
         {movieList.map((item) => (
-          <Link to={`/movies/${item.id}`} key={item.id}>
+          <Link
+            to={`/movies/${item.id}`}
+            key={item.id}
+            className="snap-center shrink-0 px-1 sm:px-2 md:px-4"
+            style={{ width: itemWidthRef.current }}
+          >
             <img
               src={IMAGE_BASE_URL + item.backdrop_path}
-              className="min-w-[1650px] md:h-[600px] object-cover object-left-top mr-8 rounded-md hover:border-[4px] border-gray-400 transition-all duration-100 ease-in snap-center"
-              alt={item.title || 'ภาพพื้นหลังภาพยนตร์'}
+              alt={item.title || 'movie backdrop'}
               loading="lazy"
+              className="w-full h-[200px] sm:h-[320px] md:h-[420px] lg:h-[550px] xl:h-[600px]
+                         object-cover rounded-lg transition-all duration-200
+                         hover:scale-[1.02] hover:border-4 border-gray-400"
             />
           </Link>
         ))}
@@ -110,4 +117,4 @@ const getTrendingMovies = async () => {
   );
 }
 
-export default Slider;  
+export default Slider;
